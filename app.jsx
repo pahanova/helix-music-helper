@@ -75,7 +75,7 @@ function App() {
   const highlightedNotes = uM(() => {
     const hl = {};
     if (activeChord) {
-      const cNotes = window.MT.chordNotes(activeChord.root, activeChord.type);
+      const cNotes = activeChord.notes || window.MT.chordNotes(activeChord.root, activeChord.type);
       cNotes.forEach((n, i) => {
         // role: root vs other
         const degInScale = scaleNotes.indexOf(n) + 1;
@@ -333,10 +333,10 @@ function App() {
                 </div>
                 {shape ? <window.ChordDiagram shape={shape} name="" width={104} height={100}/> : (
                   <div style={{height: 70, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: 'var(--text-dim)', fontFamily: 'var(--font-mono)'}}>
-                    {window.MT.chordNotes(c.root, c.type).join(' ')}
+                    {(c.notes || window.MT.chordNotes(c.root, c.type)).join(' ')}
                   </div>
                 )}
-                <div className="chord-roman">{window.MT.chordNotes(c.root, c.type).join(' · ')}</div>
+                <div className="chord-roman">{(c.notes || window.MT.chordNotes(c.root, c.type)).join(' · ')}</div>
               </div>
             );
           })}
@@ -350,7 +350,7 @@ function App() {
           <span>Поисковик аккордов</span>
         </button>
         {!searchCollapsed && (
-          <window.ChordSearch onPin={handlePin} pinnedNames={pinnedNames} />
+          <window.ChordSearch onPin={handlePin} pinnedNames={pinnedNames} onChordClick={handleChordClick} />
         )}
       </aside>
 
