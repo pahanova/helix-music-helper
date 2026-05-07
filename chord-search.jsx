@@ -278,7 +278,8 @@ function VoicingCard({ chord, inversion, instrument, tuning, scaleNotes, keyName
 
   if (layout === 'row') {
     return (
-      <div className="voicing-row" onClick={() => onChordClick && onChordClick(chordObj)}>
+      <div className="voicing-row"
+           onClick={(e) => { window.flashPulse && window.flashPulse(e.currentTarget); onChordClick && onChordClick(chordObj, voicing); }}>
         <div style={{flex: 1, minWidth: 0}}>
           <div className="row" style={{gap: 8, alignItems: 'baseline'}}>
             <span className="mono" style={{fontWeight: 700, fontSize: 15, letterSpacing: '-0.01em'}}>{fullName}</span>
@@ -304,7 +305,7 @@ function VoicingCard({ chord, inversion, instrument, tuning, scaleNotes, keyName
   // Default card layout (used in NameSearch grid)
   return (
     <div className={`chord-card ${pinned ? 'is-pinned' : ''} ${inScale ? 'is-in-key' : ''}`}
-         onClick={() => onChordClick && onChordClick(chordObj)}>
+         onClick={(e) => { window.flashPulse && window.flashPulse(e.currentTarget); onChordClick && onChordClick(chordObj, voicing); }}>
       <div className="chord-name">
         <span className="row" style={{gap: 6, alignItems: 'center'}}>
           <span>{fullName}</span>

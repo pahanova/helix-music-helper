@@ -12,6 +12,8 @@ function Fretboard({
   highlightedNotes = {}, // { 'C': { degree: 1, label: '1' }, ... }
   selectedPositions = [],// [{ string, fret }]
   onPositionClick,       // ({ string, fret, note }) => void
+  onPlayNote,            // (midi) => void  — invoked on cell click for sound
+  openMidis = [],        // absolute MIDI for each open string (low → high)
   capoFret = 0,
   showFretNumbers = true,
 }) {
@@ -63,6 +65,8 @@ function Fretboard({
                 highlightedNotes={highlightedNotes}
                 selectedPositions={selectedPositions}
                 onClick={onPositionClick}
+                onPlayNote={onPlayNote}
+                openMidi={openMidis[stringIdx]}
                 capoFret={capoFret}
                 isThick={isThick}
               />
@@ -78,6 +82,8 @@ function Fretboard({
                     highlightedNotes={highlightedNotes}
                     selectedPositions={selectedPositions}
                     onClick={onPositionClick}
+                    onPlayNote={onPlayNote}
+                    openMidi={openMidis[stringIdx]}
                     capoFret={capoFret}
                     isThick={isThick}
                     showInlay={revIdx === Math.floor(stringCount / 2) - 1 || (stringCount % 2 === 1 && revIdx === Math.floor(stringCount / 2))}
@@ -92,7 +98,7 @@ function Fretboard({
   );
 }
 
-function FretCell({ isOpen, stringIdx, fret, openNote, highlightedNotes, selectedPositions, onClick, capoFret, isThick, showInlay }) {
+function FretCell({ isOpen, stringIdx, fret, openNote, highlightedNotes, selectedPositions, onClick, onPlayNote, openMidi, capoFret, isThick, showInlay }) {
   const note = window.MT.fretNote(openNote, fret);
   const hl = highlightedNotes[note];
   const isSelected = selectedPositions.some(p => p.string === stringIdx && p.fret === fret);
@@ -104,7 +110,11 @@ function FretCell({ isOpen, stringIdx, fret, openNote, highlightedNotes, selecte
   return (
     <div
       className={`fb-cell ${isOpen ? 'is-open' : ''} ${hl ? 'has-hl' : ''} ${isSelected ? 'is-selected' : ''} ${capoFret === fret ? 'has-capo' : ''}`}
-      onClick={() => onClick && onClick({ string: stringIdx, fret, note })}
+      onClick={(e) => {
+        if (window.flashPulse) window.flashPulse(e.currentTarget);
+        if (onPlayNote && openMidi != null) onPlayNote(openMidi + fret);
+        if (onClick) onClick({ string: stringIdx, fret, note });
+      }}
     >
       {/* String line */}
       <div className={`fb-string ${isThick ? 'is-thick' : ''}`} />
@@ -141,7 +151,7 @@ function FretCell({ isOpen, stringIdx, fret, openNote, highlightedNotes, selecte
 // Piano
 // ─────────────────────────────────────────────────────────────────────────────
 
-function Piano({ startOctave = 3, octaves = 3, highlightedNotes = {}, selectedNotes = [], onKeyClick }) {
+function Piano({ startOctave = 3, octaves = 3, highlightedNotes = {}, selectedNotes = [], onKeyClick, onPlayNote }) {
   // Build white-key list and figure positions for black keys
   const whiteOrder = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
   const blackBetween = { C: 'C#', D: 'D#', F: 'F#', G: 'G#', A: 'A#' };
@@ -162,7 +172,11 @@ function Piano({ startOctave = 3, octaves = 3, highlightedNotes = {}, selectedNo
             <div
               key={`w-${i}`}
               className={`pn-key pn-white ${hl ? 'has-hl' : ''} ${sel ? 'is-sel' : ''}`}
-              onClick={() => onKeyClick && onKeyClick({ name: k.name, octave: k.octave })}
+              onClick={(e) => {
+                if (window.flashPulse) window.flashPulse(e.currentTarget);
+                if (onPlayNote) onPlayNote(window.HelixAudio ? window.HelixAudio.noteToMidi(k.name, k.octave) : null);
+                if (onKeyClick) onKeyClick({ name: k.name, octave: k.octave });
+              }}
             >
               {hl && (
                 <div className="pn-dot" style={{ background: `var(--deg-${hl.degree || 'x'})` }}>
@@ -188,7 +202,11 @@ function Piano({ startOctave = 3, octaves = 3, highlightedNotes = {}, selectedNo
               key={`b-${i}`}
               className={`pn-key pn-black ${hl ? 'has-hl' : ''} ${sel ? 'is-sel' : ''}`}
               style={{ left: `calc(${left}% - 11px)` }}
-              onClick={() => onKeyClick && onKeyClick({ name: bn, octave: k.octave })}
+              onClick={(e) => {
+                if (window.flashPulse) window.flashPulse(e.currentTarget);
+                if (onPlayNote) onPlayNote(window.HelixAudio ? window.HelixAudio.noteToMidi(bn, k.octave) : null);
+                if (onKeyClick) onKeyClick({ name: bn, octave: k.octave });
+              }}
             >
               {hl && (
                 <div className="pn-dot pn-dot-b" style={{ background: `var(--deg-${hl.degree || 'x'})` }}>
@@ -207,10 +225,18 @@ function Piano({ startOctave = 3, octaves = 3, highlightedNotes = {}, selectedNo
 // Instrument shell — picks guitar / bass / piano
 // ─────────────────────────────────────────────────────────────────────────────
 
-function Instrument({ instrument, tuning, highlightedNotes, selectedPositions, onPositionClick, capoFret, frets }) {
+function Instrument({ instrument, tuning, highlightedNotes, selectedPositions, onPositionClick, capoFret, frets, audioMuted }) {
+  const playMidi = (midi) => {
+    if (audioMuted || midi == null || !window.HelixAudio) return;
+    window.HelixAudio.ensureUnlocked();
+    window.HelixAudio.playNote(instrument, midi);
+  };
   if (instrument === 'piano') {
-    return <Piano startOctave={3} octaves={3} highlightedNotes={highlightedNotes} onKeyClick={() => {}} />;
+    return <Piano startOctave={3} octaves={3} highlightedNotes={highlightedNotes} onKeyClick={() => {}} onPlayNote={playMidi} />;
   }
+  const openMidis = window.HelixAudio
+    ? window.HelixAudio.tuningOpenMidis(tuning, instrument)
+    : [];
   return (
     <Fretboard
       tuning={tuning}
@@ -218,6 +244,8 @@ function Instrument({ instrument, tuning, highlightedNotes, selectedPositions, o
       highlightedNotes={highlightedNotes}
       selectedPositions={selectedPositions}
       onPositionClick={onPositionClick}
+      onPlayNote={playMidi}
+      openMidis={openMidis}
       capoFret={capoFret}
     />
   );

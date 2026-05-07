@@ -1,6 +1,16 @@
 // app.jsx — Main app composition
 
-const { useState: uS, useEffect: uE, useMemo: uM, useRef: uR } = React;
+const { useState: uS, useEffect: uE, useMemo: uM, useRef: uR, useCallback: uC } = React;
+
+// Trigger a one-shot pulse animation on a clicked element.
+function flashPulse(el) {
+  if (!el) return;
+  el.classList.remove('is-played');
+  void el.offsetWidth; // force reflow so the animation restarts on rapid re-clicks
+  el.classList.add('is-played');
+  setTimeout(() => el.classList.remove('is-played'), 260);
+}
+window.flashPulse = flashPulse;
 
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "dark": false,
@@ -46,10 +56,20 @@ function App() {
   const [searchCollapsed, setSearchCollapsed] = uS(false);
   const [pinnedCollapsed, setPinnedCollapsed] = uS(false);
 
+  // Audio
+  const [audioMuted, setAudioMuted] = uS(false);
+  const [chordPlayMode, setChordPlayMode] = uS('block'); // 'block' | 'arpeggio'
+
   // Theme
   uE(() => {
     document.documentElement.setAttribute('data-theme', tweaks.dark ? 'dark' : 'light');
   }, [tweaks.dark]);
+
+  // Preload current instrument's soundfont (silent on failure; first user click retries).
+  uE(() => {
+    if (audioMuted) return;
+    if (window.HelixAudio) window.HelixAudio.load(instrument).catch(() => {});
+  }, [instrument, audioMuted]);
 
   // Tuning resolution
   const tuning = uM(() => {
@@ -102,8 +122,29 @@ function App() {
     setActiveChord(null);
   }
 
-  function handleChordClick(chord) {
+  function handleChordClick(chord, voicing) {
     setActiveChord(chord);
+    if (audioMuted || !window.HelixAudio) return;
+    window.HelixAudio.ensureUnlocked();
+    let v = voicing;
+    if (!v) {
+      const inv = window.MT.voicingsForChord(chord, instrument, tuning)[0];
+      v = inv ? inv.voicing : null;
+    }
+    let midis;
+    if (v) {
+      const openMidis = window.HelixAudio.tuningOpenMidis(tuning, instrument);
+      midis = window.HelixAudio.voicingToMidis(v, openMidis);
+    } else {
+      // Fallback: synth chord from intervals at sensible octave for the instrument.
+      const intervals = chord.intervals
+        || window.MT.CHORD_TYPES[chord.type]
+        || [0, 4, 7];
+      const baseOct = instrument === 'bass' ? 2 : 3;
+      const root = window.HelixAudio.noteToMidi(chord.root, baseOct);
+      midis = intervals.map(i => root + i);
+    }
+    window.HelixAudio.playChord(instrument, midis, { mode: chordPlayMode });
   }
 
   function handlePin(c) {
@@ -146,6 +187,19 @@ function App() {
 
         <div className="topbar-spacer" />
 
+        <button
+          className={`audio-chip ${chordPlayMode === 'arpeggio' ? 'is-on' : ''}`}
+          onClick={() => setChordPlayMode(m => m === 'block' ? 'arpeggio' : 'block')}
+          title={chordPlayMode === 'block' ? 'Сейчас: аккорд целиком. Нажми, чтобы играть по очереди' : 'Сейчас: ноты по очереди. Нажми, чтобы играть аккордом'}
+          disabled={audioMuted}>
+          {chordPlayMode === 'block' ? 'аккорд' : 'арпеджио'}
+        </button>
+        <button
+          className="btn-ghost"
+          onClick={() => setAudioMuted(m => !m)}
+          title={audioMuted ? 'Включить звук' : 'Выключить звук'}>
+          <Icon name={audioMuted ? 'volume-x' : 'volume'} />
+        </button>
         <button className="btn-ghost" onClick={() => setTweak('dark', !tweaks.dark)} title={tweaks.dark ? 'Светлая' : 'Тёмная'}>
           <Icon name={tweaks.dark ? 'sun' : 'moon'} />
         </button>
@@ -221,7 +275,7 @@ function App() {
               {diatonicChords.map((c, i) => (
                 <button key={c.name + i}
                         className={`row ${activeChord && activeChord.root === c.root && activeChord.quality === c.quality ? 'is-active' : ''}`}
-                        onClick={() => handleChordClick({ root: c.root, type: c.quality, name: c.name })}
+                        onClick={(e) => { flashPulse(e.currentTarget); handleChordClick({ root: c.root, type: c.quality, name: c.name }); }}
                         style={{justifyContent: 'space-between', padding: '6px 8px', borderRadius: 6}}>
                   <span className="row" style={{gap: 8}}>
                     <span className="deg-chip" style={{background: `var(--deg-${i+1})`}}>{i+1}</span>
@@ -240,7 +294,7 @@ function App() {
               {secondaryDoms.map((d, i) => (
                 <button key={d.name + i}
                         className="row"
-                        onClick={() => handleChordClick({ root: d.root, type: '7', name: d.name })}
+                        onClick={(e) => { flashPulse(e.currentTarget); handleChordClick({ root: d.root, type: '7', name: d.name }); }}
                         style={{justifyContent: 'space-between', padding: '6px 8px', borderRadius: 6}}>
                   <span className="mono" style={{fontWeight: 600}}>{d.name}</span>
                   <span className="dim mono" style={{fontSize: 10.5}}>{d.label}</span>
@@ -278,6 +332,7 @@ function App() {
               frets={instrument === 'bass' ? 18 : 16}
               selectedPositions={[]}
               onPositionClick={() => {}}
+              audioMuted={audioMuted}
             />
           </div>
 
@@ -315,7 +370,8 @@ function App() {
                         const inversions = window.MT.voicingsForChord({ root: c.root, type: c.quality }, instrument, tuning);
                         const root = inversions[0];
                         return (
-                          <div key={i} className="chord-card" style={{width: 92}} onClick={() => handleChordClick({root: c.root, type: c.quality, name: c.name})}>
+                          <div key={i} className="chord-card" style={{width: 92}}
+                               onClick={(e) => { flashPulse(e.currentTarget); handleChordClick({root: c.root, type: c.quality, name: c.name}, root && root.voicing); }}>
                             <div className="chord-name" style={{fontSize: 13}}>
                               <span>{c.name}</span>
                             </div>
@@ -362,7 +418,8 @@ function App() {
                 const inv = inversions.find(v => v.bassNote === bassNote) || inversions[0];
                 const isPiano = inv && inv.voicing.kind === 'piano';
                 return (
-                  <div key={i} className="chord-card is-pinned" onClick={() => handleChordClick(c)}>
+                  <div key={i} className="chord-card is-pinned"
+                       onClick={(e) => { flashPulse(e.currentTarget); handleChordClick(c, inv && inv.voicing); }}>
                     <div className="chord-name">
                       <span>{c.name}</span>
                       <button className="btn-ghost" onClick={(e) => { e.stopPropagation(); handlePin(c); }} style={{padding: 2, color: 'var(--text-dim)'}} title="Открепить">×</button>
@@ -494,6 +551,8 @@ function Icon({ name, size = 14 }) {
     case 'chevron-right': return <svg {...props}><path d="m9 18 6-6-6-6"/></svg>;
     case 'sidebar-left': return <svg {...props}><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>;
     case 'sidebar-right': return <svg {...props}><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/></svg>;
+    case 'volume': return <svg {...props}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>;
+    case 'volume-x': return <svg {...props}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/></svg>;
     default: return null;
   }
 }

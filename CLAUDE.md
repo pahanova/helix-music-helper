@@ -48,6 +48,7 @@ instrument.css          — гриф + фортепиано
 circle.css              — круг + диаграммы аккордов + поисковик
 music-theory.js         — гаммы, аккорды, тюнинги, identifyChord, генератор войсингов и инверсий
 chord-shapes-data.js    — курированная гитарная БД из chords-db (≈300 аппликатур), сгенерированный артефакт
+audio.js                — `window.HelixAudio`: soundfont-player + MusyngKite, MIDI-хелперы, playNote/playChord
 tweaks-panel.jsx        — Tweaks-шелл и контролы
 instrument.jsx          — Fretboard / Piano / Instrument shell
 circle.jsx              — CircleOfFifths
@@ -57,6 +58,17 @@ chord-search.jsx        — поиск по имени/нотам/позиции
 app.jsx                 — App, топбар, панели, закреплённые
 scripts/build-chord-shapes.js — пересборка chord-shapes-data.js из chords-db (`node scripts/build-chord-shapes.js`)
 ```
+
+## Звук
+
+- **Стек:** `soundfont-player` (CDN unpkg) + сэмплы MusyngKite (`gleitz/midi-js-soundfonts`). Лицензии MIT/CC, никаких локальных файлов сэмплов. Семпл текущего инструмента подгружается лениво, кэшируется.
+- **Карта инструментов:** `guitar → acoustic_guitar_steel`, `bass → electric_bass_finger`, `piano → acoustic_grand_piano` — в `audio.js → INSTRUMENT_TO_SF`.
+- **MIDI:** `HelixAudio.tuningOpenMidis(tuning, instrument)` назначает абсолютный MIDI каждой открытой струне (anchor: гитара E2 = 40, бас B0 = 23; следующая струна — минимальный pitch выше предыдущей с нужным pitch class). Для пианино — `noteToMidi(name, octave)` (C4 = 60).
+- **Точки входа:**
+  - `Instrument` shell в `instrument.jsx` пробрасывает `playMidi` в Fretboard/Piano; cell/key click вызывает `HelixAudio.playNote(instrument, midi)`.
+  - `handleChordClick(chord, voicing?)` в `app.jsx` — все клики по карточкам идут сюда. Когда воизинг известен (карточка инверсии в поиске, закреплённый, мини-карточка диатоники) — играем именно его MIDI через `voicingToMidis`. Иначе — root-инверсия из `voicingsForChord`. Крайний фолбэк (нет играбельной формы вообще) — синтез из `CHORD_TYPES[type]` в дефолтной октаве.
+- **Pulse-анимация:** `window.flashPulse(el)` (определена в `app.jsx`) добавляет класс `.is-played`, кейфреймы в `styles.css`. Используется на всех кликах (карточки, ноты грифа, клавиши пианино, строки диатоники).
+- **Топбар:** чип `аккорд / арпеджио` (`chordPlayMode`), кнопка mute (`audioMuted`). Mute не отключает clicks — только воспроизведение.
 
 ## Воркфлоу аппликатур и обращений
 
