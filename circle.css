@@ -63,10 +63,10 @@
 }
 
 /* Chord diagram (mini fretboard inside cards) */
-.diag {
+.diag { display: block; }
+.chord-card .diag {
   width: 100%;
   height: 64px;
-  display: block;
 }
 .diag-name {
   font-family: var(--font-mono);
@@ -108,15 +108,46 @@
   border-color: var(--text);
 }
 
-/* Pinned strip */
+/* Pinned bar (toggle + strip) */
+.pinned-bar {
+  border-top: 1px solid var(--border);
+  background: var(--bg-muted);
+  flex-shrink: 0;
+}
+.pinned-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  width: 100%;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+}
+.pinned-toggle:hover {
+  color: var(--text);
+  background: var(--bg-hover);
+}
+.pinned-count {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0;
+  color: var(--text-dim);
+  margin-left: auto;
+  text-transform: none;
+}
 .pinned-strip {
   display: flex;
   gap: 8px;
-  padding: 10px 14px;
-  border-top: 1px solid var(--border);
-  background: var(--bg-muted);
+  padding: 0 14px 10px;
   overflow-x: auto;
-  flex-shrink: 0;
 }
 .pinned-strip-empty {
   font-size: 11.5px;
@@ -165,6 +196,29 @@
   border-radius: var(--r-lg);
   padding: 12px;
   margin-top: 4px;
+}
+
+/* Voicing row — used in Constructor result for stacking inversions */
+.voicing-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  cursor: pointer;
+  transition: border-color 80ms ease, background 80ms ease;
+}
+.voicing-row:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-muted);
+}
+
+/* Piano chord diagram tweaks */
+.chord-card .piano-diag {
+  width: 100%;
+  height: auto;
 }
 .note-pill {
   display: inline-flex;

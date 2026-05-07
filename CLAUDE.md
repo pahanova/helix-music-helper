@@ -46,11 +46,21 @@ index.html              — точка входа
 styles.css              — токены дизайна, базовые стили, лейаут
 instrument.css          — гриф + фортепиано
 circle.css              — круг + диаграммы аккордов + поисковик
-music-theory.js         — гаммы, аккорды, тюнинги, identifyChord
+music-theory.js         — гаммы, аккорды, тюнинги, identifyChord, генератор войсингов и инверсий
+chord-shapes-data.js    — курированная гитарная БД из chords-db (≈300 аппликатур), сгенерированный артефакт
 tweaks-panel.jsx        — Tweaks-шелл и контролы
 instrument.jsx          — Fretboard / Piano / Instrument shell
 circle.jsx              — CircleOfFifths
-chord-diagram.jsx       — мини-диаграмма аппликатуры + библиотека форм
-chord-search.jsx        — поиск по имени/нотам/позиции
+chord-diagram.jsx       — мини-диаграмма аппликатуры (гриф) + 20 базовых форм для совместимости
+piano-chord-diagram.jsx — мини-диаграмма клавиатуры с подсветкой нот аккорда
+chord-search.jsx        — поиск по имени/нотам/позиции, VoicingCard (рендерит правильную диаграмму по инструменту)
 app.jsx                 — App, топбар, панели, закреплённые
+scripts/build-chord-shapes.js — пересборка chord-shapes-data.js из chords-db (`node scripts/build-chord-shapes.js`)
 ```
+
+## Воркфлоу аппликатур и обращений
+
+- `window.MT.voicingsForChord(chord, instrument, tuning)` — основная точка входа. Возвращает массив инверсий (root/1st/2nd/3rd, до 4 для септаккордов), у каждой — `voicing` (форма для рендера) и `source` (`'curated'` | `'auto'`).
+- На гитаре в standard tuning сначала ищется курированная форма в `window.CHORD_SHAPES_DB` (по имени с учётом slash); если не нашлось — генератор подбирает играбельный войсинг.
+- На басу/пианино/нестандартном строе — всегда генератор; для баса `allowBarre: false`.
+- Скоринг генератора: `Math.max(0, lowFret - 3) * 1` (низкие позиции свободно, выше — пенальти) + `span * 1.5` + `internalMutes * 4` + бонус за полноту (≥5 струн). Менять с осторожностью — настроено под играбельность популярных аккордов.

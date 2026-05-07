@@ -1,9 +1,9 @@
 // chord-diagram.jsx — small fretboard-style chord diagram
 
-function ChordDiagram({ shape, name, frets = 5, width = 120, height = 130 }) {
-  // shape: { positions: [{ string, fret, finger?, mute? }], baseFret }
+function ChordDiagram({ shape, name, frets = 5, width = 120, height = 130, source }) {
+  // shape: { positions: [{ string, fret, finger?, mute? }], baseFret, tuning?, allowBarre? }
   // strings drawn vertically (low on left)
-  const strings = 6;
+  const strings = shape?.tuning?.length || 6;
   const padTop = 24;
   const padBottom = 14;
   const padX = 16;
@@ -14,9 +14,10 @@ function ChordDiagram({ shape, name, frets = 5, width = 120, height = 130 }) {
 
   const baseFret = shape?.baseFret || 1;
   const positions = shape?.positions || [];
+  const allowBarre = shape?.allowBarre !== false;
 
   return (
-    <svg className="diag" viewBox={`0 0 ${width} ${height}`}>
+    <svg className="diag" width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
       {/* Top — name */}
       <text x={width / 2} y={14} textAnchor="middle" className="diag-name">{name}</text>
 
@@ -71,7 +72,7 @@ function ChordDiagram({ shape, name, frets = 5, width = 120, height = 130 }) {
       })}
 
       {/* Barre detection */}
-      {(() => {
+      {allowBarre && (() => {
         const fretCounts = {};
         positions.filter(p => p.fret > 0).forEach(p => {
           fretCounts[p.fret] = (fretCounts[p.fret] || 0) + 1;
@@ -87,6 +88,13 @@ function ChordDiagram({ shape, name, frets = 5, width = 120, height = 130 }) {
                 rx="3" fill="var(--text)" opacity="0.85" />
         );
       })()}
+
+      {/* Source badge — 'auto' for generated shapes */}
+      {source === 'auto' && (
+        <text x={width - padX} y={14} textAnchor="end"
+              fontSize="8" fill="var(--text-dim)" fontFamily="var(--font-mono)"
+              letterSpacing="0.04em">auto</text>
+      )}
     </svg>
   );
 }

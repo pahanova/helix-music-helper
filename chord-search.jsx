@@ -1,4 +1,5 @@
-// chord-search.jsx — chord constructor (root + modifiers + omits) + compact name search
+// chord-search.jsx — chord constructor + name search.
+// Each chord expands into multiple voicing cards (one per inversion).
 
 const { useState: useS, useMemo: useM } = React;
 
@@ -19,7 +20,7 @@ const EMPTY_SPEC = {
   omit5: false,
 };
 
-function ChordSearch({ onPin, pinnedNames, onChordClick }) {
+function ChordSearch({ instrument, tuning, onPin, pinnedNames, onChordClick }) {
   const [tab, setTab] = useS('notes'); // 'notes' | 'position'
   const [spec, setSpec] = useS(EMPTY_SPEC);
   const [nameOpen, setNameOpen] = useS(false);
@@ -30,7 +31,6 @@ function ChordSearch({ onPin, pinnedNames, onChordClick }) {
 
   const built = useM(() => window.MT.buildChord(spec), [spec]);
 
-  // Switching tabs collapses name search.
   function switchTab(t) { setTab(t); if (t !== 'notes') setNameOpen(false); }
 
   return (
@@ -49,12 +49,16 @@ function ChordSearch({ onPin, pinnedNames, onChordClick }) {
       </div>
 
       {nameOpen && (
-        <NameSearch q={nameQ} setQ={setNameQ} onPin={onPin} pinnedNames={pinnedNames} onChordClick={onChordClick} />
+        <NameSearch q={nameQ} setQ={setNameQ}
+                    instrument={instrument} tuning={tuning}
+                    onPin={onPin} pinnedNames={pinnedNames} onChordClick={onChordClick} />
       )}
 
       {!nameOpen && tab === 'notes' && (
         <Constructor spec={spec} setSpec={setSpec} update={update} setEnum={setEnum}
-                     built={built} onPin={onPin} pinnedNames={pinnedNames} onChordClick={onChordClick} />
+                     built={built}
+                     instrument={instrument} tuning={tuning}
+                     onPin={onPin} pinnedNames={pinnedNames} onChordClick={onChordClick} />
       )}
 
       {!nameOpen && tab === 'position' && <PositionPlaceholder />}
@@ -64,7 +68,7 @@ function ChordSearch({ onPin, pinnedNames, onChordClick }) {
 
 /* ─── Constructor ───────────────────────────────────────────── */
 
-function Constructor({ spec, setSpec, update, setEnum, built, onPin, pinnedNames, onChordClick }) {
+function Constructor({ spec, setSpec, update, setEnum, built, instrument, tuning, onPin, pinnedNames, onChordClick }) {
   const fifthForced = spec.quality === 'dim' || spec.quality === 'aug';
   const susOn = !!spec.sus;
   const isPower = spec.quality === '5';
@@ -73,7 +77,6 @@ function Constructor({ spec, setSpec, update, setEnum, built, onPin, pinnedNames
 
   return (
     <div className="col" style={{gap: 12}}>
-      {/* Root */}
       <Group label="Корень" right={spec.root && (
         <button className="btn-ghost" onClick={reset} style={{fontSize: 11, padding: '0 6px'}}>сброс</button>
       )}>
@@ -87,7 +90,6 @@ function Constructor({ spec, setSpec, update, setEnum, built, onPin, pinnedNames
         </div>
       </Group>
 
-      {/* Quality */}
       <Group label="Качество">
         <div className="filter-row">
           {[['maj','maj'],['min','min'],['dim','dim'],['aug','aug'],['5','5']].map(([v,l]) => (
@@ -101,7 +103,6 @@ function Constructor({ spec, setSpec, update, setEnum, built, onPin, pinnedNames
         </div>
       </Group>
 
-      {/* Sus */}
       <Group label="Sus" hint={isPower ? 'недоступно при качестве 5' : 'заменяет терцию'}>
         <div className="filter-row">
           <button className={`filter-chip ${!spec.sus ? 'is-on' : ''}`}
@@ -116,7 +117,6 @@ function Constructor({ spec, setSpec, update, setEnum, built, onPin, pinnedNames
         </div>
       </Group>
 
-      {/* Extensions */}
       <Group label="Расширения" hint={spec.ext7 ? null : '[7] делает 7-ку доминантной'}>
         <div className="filter-row">
           <button className={`filter-chip ${spec.ext7 ? 'is-on' : ''}`}
@@ -155,7 +155,6 @@ function Constructor({ spec, setSpec, update, setEnum, built, onPin, pinnedNames
         </div>
       </Group>
 
-      {/* Altered 5th */}
       <Group label="5-я ступень" hint={fifthForced ? `задана качеством ${spec.quality}` : null}>
         <div className="filter-row">
           <button className={`filter-chip ${!spec.alt5 ? 'is-on' : ''}`}
@@ -170,7 +169,6 @@ function Constructor({ spec, setSpec, update, setEnum, built, onPin, pinnedNames
         </div>
       </Group>
 
-      {/* Omit */}
       <Group label="Omit" hint={isPower ? 'нет 3 — задано качеством 5' : null}>
         <div className="filter-row">
           <button className={`filter-chip ${thirdOmitted ? 'is-on' : ''}`}
@@ -182,8 +180,9 @@ function Constructor({ spec, setSpec, update, setEnum, built, onPin, pinnedNames
         </div>
       </Group>
 
-      {/* Result */}
-      <ConstructorResult built={built} onPin={onPin} pinnedNames={pinnedNames} onChordClick={onChordClick} />
+      <ConstructorResult built={built}
+                         instrument={instrument} tuning={tuning}
+                         onPin={onPin} pinnedNames={pinnedNames} onChordClick={onChordClick} />
     </div>
   );
 }
@@ -201,7 +200,7 @@ function Group({ label, hint, right, children }) {
   );
 }
 
-function ConstructorResult({ built, onPin, pinnedNames, onChordClick }) {
+function ConstructorResult({ built, instrument, tuning, onPin, pinnedNames, onChordClick }) {
   if (!built) {
     return (
       <div className="muted" style={{
@@ -212,27 +211,13 @@ function ConstructorResult({ built, onPin, pinnedNames, onChordClick }) {
       </div>
     );
   }
-  const shape = window.CHORD_SHAPES[built.name];
-  const pinned = pinnedNames.includes(built.name);
-  const chordObj = { name: built.name, root: built.root, type: 'maj', notes: built.notes };
+  // Determine type — try to round-trip via a simple lookup against CHORD_TYPES based on intervals.
+  const baseChord = { root: built.root, type: deriveTypeFromBuilt(built), name: built.name, notes: built.notes };
+  const inversions = window.MT.voicingsForChord(baseChord, instrument, tuning);
 
   return (
     <div className="constructor-result">
-      <div className="row" style={{justifyContent: 'space-between', gap: 8}}>
-        <div className="row" style={{gap: 8, flex: 1, minWidth: 0, cursor: 'pointer'}}
-             onClick={() => onChordClick && onChordClick(chordObj)}
-             title="Подсветить на инструменте">
-          <span className="mono" style={{fontWeight: 700, fontSize: 16, letterSpacing: '-0.01em'}}>{built.name}</span>
-        </div>
-        {shape && (
-          <button className="btn-ghost" onClick={() => onPin && onPin(chordObj)}
-                  style={{padding: 3, color: pinned ? 'var(--text)' : 'var(--text-dim)'}}
-                  title={pinned ? 'Открепить' : 'Закрепить'}>
-            <PinIcon filled={pinned}/>
-          </button>
-        )}
-      </div>
-      <div className="row" style={{gap: 4, flexWrap: 'wrap', marginTop: 4}}>
+      <div className="row" style={{gap: 4, flexWrap: 'wrap', marginBottom: 8}}>
         {built.notes.map((n, i) => (
           <span key={i} className="note-pill">
             <span className="note-pill-deg">{built.labels[i]}</span>
@@ -240,28 +225,106 @@ function ConstructorResult({ built, onPin, pinnedNames, onChordClick }) {
           </span>
         ))}
       </div>
-      {shape ? (
-        <div style={{marginTop: 10}}>
-          <window.ChordDiagram shape={shape} name="" width={160} height={140}/>
+      {inversions.length === 0 ? (
+        <div className="dim" style={{fontSize: 11, marginTop: 8, textAlign: 'center'}}>
+          не нашлось играбельной аппликатуры для этого инструмента
         </div>
       ) : (
-        <div className="dim" style={{fontSize: 11, marginTop: 10, textAlign: 'center'}}>
-          нет формы в библиотеке — но клик на названии подсветит на инструменте
+        <div className="col" style={{gap: 8}}>
+          {inversions.map((inv, idx) => (
+            <VoicingCard key={idx}
+                         chord={baseChord}
+                         inversion={inv}
+                         instrument={instrument}
+                         tuning={tuning}
+                         pinnedNames={pinnedNames}
+                         onPin={onPin}
+                         onChordClick={onChordClick}
+                         layout="row" />
+          ))}
         </div>
       )}
     </div>
   );
 }
 
+// Map a buildChord result back to a CHORD_TYPES key (best-effort) for downstream lookup.
+function deriveTypeFromBuilt(built) {
+  if (!built) return 'maj';
+  const intervals = built.intervals.slice().sort((a, b) => a - b).join(',');
+  for (const [t, ivs] of Object.entries(window.MT.CHORD_TYPES)) {
+    if (ivs.slice().sort((a, b) => a - b).join(',') === intervals) return t;
+  }
+  return 'maj';
+}
+
+/* ─── Voicing card (used everywhere a chord+inversion shows up) ─── */
+
+function VoicingCard({ chord, inversion, instrument, tuning, pinnedNames, onPin, onChordClick, layout = 'card' }) {
+  const { fullName, voicing, source, label, bassNote } = inversion;
+  const pinned = pinnedNames && pinnedNames.includes(fullName);
+  const chordObj = { ...chord, name: fullName, bassNote, notes: chord.notes };
+
+  const diag = voicing.kind === 'piano'
+    ? <window.PianoChordDiagram voicing={voicing} name="" width={layout === 'row' ? 180 : 124} height={layout === 'row' ? 80 : 70} />
+    : <window.ChordDiagram shape={voicing} name="" source={source}
+                           width={layout === 'row' ? 132 : 104} height={layout === 'row' ? 116 : 100} />;
+
+  if (layout === 'row') {
+    return (
+      <div className="voicing-row" onClick={() => onChordClick && onChordClick(chordObj)}>
+        <div style={{flex: 1, minWidth: 0}}>
+          <div className="row" style={{gap: 8, alignItems: 'baseline'}}>
+            <span className="mono" style={{fontWeight: 700, fontSize: 15, letterSpacing: '-0.01em'}}>{fullName}</span>
+            <span className="dim" style={{fontSize: 10.5, fontFamily: 'var(--font-mono)'}}>
+              {label}{source === 'auto' ? ' · auto' : ''}
+            </span>
+          </div>
+          <div className="dim" style={{fontSize: 10.5, marginTop: 2, fontFamily: 'var(--font-mono)'}}>
+            бас: {bassNote}
+          </div>
+        </div>
+        <div onClick={e => e.stopPropagation()} style={{flexShrink: 0}}>{diag}</div>
+        <button className="btn-ghost"
+                onClick={(e) => { e.stopPropagation(); onPin && onPin(chordObj); }}
+                style={{padding: 3, color: pinned ? 'var(--text)' : 'var(--text-dim)', alignSelf: 'flex-start'}}
+                title={pinned ? 'Открепить' : 'Закрепить'}>
+          <PinIcon filled={pinned}/>
+        </button>
+      </div>
+    );
+  }
+
+  // Default card layout (used in NameSearch grid)
+  return (
+    <div className={`chord-card ${pinned ? 'is-pinned' : ''}`}
+         onClick={() => onChordClick && onChordClick(chordObj)}>
+      <div className="chord-name">
+        <span>{fullName}</span>
+        <button className="btn-ghost"
+                onClick={(e) => { e.stopPropagation(); onPin && onPin(chordObj); }}
+                style={{padding: 2, color: pinned ? 'var(--text)' : 'var(--text-dim)'}}
+                title={pinned ? 'Открепить' : 'Закрепить'}>
+          <PinIcon filled={pinned}/>
+        </button>
+      </div>
+      {diag}
+      <div className="chord-roman">
+        {label}{source === 'auto' ? ' · auto' : ''}
+      </div>
+    </div>
+  );
+}
+
 /* ─── Compact "by name" search ──────────────────────────────── */
 
-function NameSearch({ q, setQ, onPin, pinnedNames, onChordClick }) {
+function NameSearch({ q, setQ, instrument, tuning, onPin, pinnedNames, onChordClick }) {
   const all = useM(() => {
     const list = [];
     window.MT.NOTES_SHARP.forEach(root => {
       Object.keys(window.MT.CHORD_TYPES).forEach(type => {
-        const name = root + (type === 'maj' ? '' : type);
-        list.push({ root, type, name, notes: window.MT.chordNotes(root, type) });
+        const display = root + (type === 'maj' ? '' : type === 'min' ? 'm' : type);
+        list.push({ root, type, name: display, notes: window.MT.chordNotes(root, type) });
       });
     });
     return list;
@@ -277,7 +340,7 @@ function NameSearch({ q, setQ, onPin, pinnedNames, onChordClick }) {
       if (nm.startsWith(Q)) starts.push(c);
       else if (nm.includes(Q)) inc.push(c);
     });
-    return [...starts, ...inc].slice(0, 16);
+    return [...starts, ...inc].slice(0, 8); // cap at 8 base chords (each expands to 3–4 cards)
   }, [all, q]);
 
   return (
@@ -295,31 +358,18 @@ function NameSearch({ q, setQ, onPin, pinnedNames, onChordClick }) {
               Ничего не нашлось.
             </div>
           )}
-          {filtered.map(c => {
-            const shape = window.CHORD_SHAPES[c.name];
-            const pinned = pinnedNames.includes(c.name);
-            return (
-              <div key={c.name} className={`chord-card ${pinned ? 'is-pinned' : ''}`}
-                   onClick={() => onChordClick && onChordClick(c)}>
-                <div className="chord-name">
-                  <span>{c.name}</span>
-                  <button className="btn-ghost"
-                          onClick={(e) => { e.stopPropagation(); onPin && onPin(c); }}
-                          style={{padding: 2, color: pinned ? 'var(--text)' : 'var(--text-dim)'}}
-                          title="Закрепить">
-                    <PinIcon filled={pinned}/>
-                  </button>
-                </div>
-                {shape ? (
-                  <window.ChordDiagram shape={shape} name=""/>
-                ) : (
-                  <div style={{height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)'}}>
-                    {c.notes.join(' · ')}
-                  </div>
-                )}
-                <div className="chord-roman">{c.notes.slice(0, 5).join(' · ')}</div>
-              </div>
-            );
+          {filtered.flatMap(c => {
+            const inversions = window.MT.voicingsForChord(c, instrument, tuning);
+            return inversions.map((inv, i) => (
+              <VoicingCard key={`${c.name}-${i}`}
+                           chord={c}
+                           inversion={inv}
+                           instrument={instrument}
+                           tuning={tuning}
+                           pinnedNames={pinnedNames}
+                           onPin={onPin}
+                           onChordClick={onChordClick} />
+            ));
           })}
         </div>
       )}
@@ -363,3 +413,4 @@ function PinIcon({ filled }) {
 }
 
 window.ChordSearch = ChordSearch;
+window.VoicingCard = VoicingCard;

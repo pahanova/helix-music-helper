@@ -44,6 +44,7 @@ function App() {
   ]);
   const [circleCollapsed, setCircleCollapsed] = uS(false);
   const [searchCollapsed, setSearchCollapsed] = uS(false);
+  const [pinnedCollapsed, setPinnedCollapsed] = uS(false);
 
   // Theme
   uE(() => {
@@ -243,7 +244,7 @@ function App() {
 
       {/* Main pane */}
       <main className="pane-main">
-        <div style={{padding: 16, display: 'flex', flexDirection: 'column', gap: 14, flex: 1, minHeight: 0}}>
+        <div style={{padding: 16, display: 'flex', flexDirection: 'column', gap: 14, flex: 1, minHeight: 0, overflowY: 'auto'}}>
           {/* Instrument */}
           <div>
             <div className="inst-bar">
@@ -294,13 +295,18 @@ function App() {
                     <div className="sec-h" style={{margin: '0 0 8px 0'}}>Аккорды тональности</div>
                     <div className="row-wrap">
                       {diatonicChords.map((c, i) => {
-                        const shape = window.CHORD_SHAPES[c.name];
+                        const inversions = window.MT.voicingsForChord({ root: c.root, type: c.quality }, instrument, tuning);
+                        const root = inversions[0];
                         return (
                           <div key={i} className="chord-card" style={{width: 92}} onClick={() => handleChordClick({root: c.root, type: c.quality, name: c.name})}>
                             <div className="chord-name" style={{fontSize: 13}}>
                               <span>{c.name}</span>
                             </div>
-                            {shape ? <window.ChordDiagram shape={shape} name="" width={92} height={88}/> : (
+                            {root ? (
+                              root.voicing.kind === 'piano'
+                                ? <window.PianoChordDiagram voicing={root.voicing} name="" width={92} height={62}/>
+                                : <window.ChordDiagram shape={root.voicing} name="" source={root.source} width={92} height={88}/>
+                            ) : (
                               <div style={{height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-dim)'}}>
                                 {window.MT.chordNotes(c.root, c.quality).join(' ')}
                               </div>
@@ -320,26 +326,47 @@ function App() {
           </div>
         </div>
 
-        {/* Pinned strip */}
-        <div className="pinned-strip">
-          {pinned.length === 0 && <div className="pinned-strip-empty">Закрепи аккорды из поиска или из диатоники — появятся здесь</div>}
-          {pinned.map((c, i) => {
-            const shape = window.CHORD_SHAPES[c.name];
-            return (
-              <div key={i} className="chord-card is-pinned" onClick={() => handleChordClick(c)}>
-                <div className="chord-name">
-                  <span>{c.name}</span>
-                  <button className="btn-ghost" onClick={(e) => { e.stopPropagation(); handlePin(c); }} style={{padding: 2, color: 'var(--text-dim)'}} title="Открепить">×</button>
-                </div>
-                {shape ? <window.ChordDiagram shape={shape} name="" width={104} height={100}/> : (
-                  <div style={{height: 70, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: 'var(--text-dim)', fontFamily: 'var(--font-mono)'}}>
-                    {(c.notes || window.MT.chordNotes(c.root, c.type)).join(' ')}
+        {/* Pinned bar */}
+        <div className="pinned-bar">
+          <button
+            className="pinned-toggle"
+            onClick={() => setPinnedCollapsed(c => !c)}
+            title={pinnedCollapsed ? 'Показать закреплённые' : 'Скрыть закреплённые'}>
+            <Icon name={pinnedCollapsed ? 'chevron-up' : 'chevron-down'} />
+            <span>Закреплённые аккорды</span>
+            <span className="pinned-count">{pinned.length}</span>
+          </button>
+          {!pinnedCollapsed && (
+            <div className="pinned-strip">
+              {pinned.length === 0 && <div className="pinned-strip-empty">Закрепи аккорды из поиска или из диатоники — появятся здесь</div>}
+              {pinned.map((c, i) => {
+                const bassNote = c.bassNote || c.root;
+                const inversions = window.MT.voicingsForChord(c, instrument, tuning);
+                const inv = inversions.find(v => v.bassNote === bassNote) || inversions[0];
+                const isPiano = inv && inv.voicing.kind === 'piano';
+                return (
+                  <div key={i} className="chord-card is-pinned" onClick={() => handleChordClick(c)}>
+                    <div className="chord-name">
+                      <span>{c.name}</span>
+                      <button className="btn-ghost" onClick={(e) => { e.stopPropagation(); handlePin(c); }} style={{padding: 2, color: 'var(--text-dim)'}} title="Открепить">×</button>
+                    </div>
+                    {inv ? (
+                      isPiano
+                        ? <window.PianoChordDiagram voicing={inv.voicing} name="" width={104} height={66}/>
+                        : <window.ChordDiagram shape={inv.voicing} name="" source={inv.source} width={104} height={100}/>
+                    ) : (
+                      <div style={{height: 70, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: 'var(--text-dim)', fontFamily: 'var(--font-mono)'}}>
+                        {(c.notes || window.MT.chordNotes(c.root, c.type)).join(' ')}
+                      </div>
+                    )}
+                    <div className="chord-roman">
+                      {inv ? `${inv.label}${inv.source === 'auto' ? ' · auto' : ''}` : (c.notes || window.MT.chordNotes(c.root, c.type)).join(' · ')}
+                    </div>
                   </div>
-                )}
-                <div className="chord-roman">{(c.notes || window.MT.chordNotes(c.root, c.type)).join(' · ')}</div>
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          )}
         </div>
       </main>
 
@@ -350,7 +377,12 @@ function App() {
           <span>Поисковик аккордов</span>
         </button>
         {!searchCollapsed && (
-          <window.ChordSearch onPin={handlePin} pinnedNames={pinnedNames} onChordClick={handleChordClick} />
+          <window.ChordSearch
+            instrument={instrument}
+            tuning={tuning}
+            onPin={handlePin}
+            pinnedNames={pinnedNames}
+            onChordClick={handleChordClick} />
         )}
       </aside>
 
@@ -434,6 +466,7 @@ function Icon({ name, size = 14 }) {
     case 'sun': return <svg {...props}><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>;
     case 'moon': return <svg {...props}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>;
     case 'chevron-down': return <svg {...props}><path d="m6 9 6 6 6-6"/></svg>;
+    case 'chevron-up': return <svg {...props}><path d="m18 15-6-6-6 6"/></svg>;
     case 'chevron-right': return <svg {...props}><path d="m9 18 6-6-6-6"/></svg>;
     case 'sidebar-left': return <svg {...props}><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>;
     case 'sidebar-right': return <svg {...props}><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/></svg>;
