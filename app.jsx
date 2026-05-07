@@ -30,7 +30,7 @@ function App() {
 
   // Music state
   const [rootNote, setRootNote] = uS('C');
-  const [mode, setMode] = uS('major'); // 'major' | 'minor'
+  const [mode, setMode] = uS('major'); // any key in window.MT.MODES
   const [instrument, setInstrument] = uS('guitar');
   const [tuningName, setTuningName] = uS('Standard');
   const [capoFret, setCapoFret] = uS(0);
@@ -72,6 +72,7 @@ function App() {
   const scaleNotes = uM(() => window.MT.scaleNotes(rootNote, mode), [rootNote, mode]);
   const diatonicChords = uM(() => window.MT.diatonicChords(rootNote, mode), [rootNote, mode]);
   const secondaryDoms = uM(() => window.MT.secondaryDominants(rootNote, mode), [rootNote, mode]);
+  const hasDiatonic = diatonicChords.length > 0;
 
   const highlightedNotes = uM(() => {
     const hl = {};
@@ -140,6 +141,7 @@ function App() {
           <span className="muted" style={{fontSize: 11.5, fontFamily: 'var(--font-mono)'}}>
             {scaleNotes.join(' ')}
           </span>
+          <span className="dim" style={{fontSize: 11.5, marginLeft: 4}}>{window.MT.MODES[mode].label}</span>
         </div>
 
         <div className="topbar-spacer" />
@@ -196,10 +198,13 @@ function App() {
 
         <Section title="Тональность">
           <div className="col" style={{gap: 6}}>
-            <div className="row" style={{gap: 4}}>
-              <button className={`filter-chip ${mode === 'major' ? 'is-on' : ''}`} onClick={() => setMode('major')}>major</button>
-              <button className={`filter-chip ${mode === 'minor' ? 'is-on' : ''}`} onClick={() => setMode('minor')}>minor</button>
-            </div>
+            <select value={mode}
+                    onChange={e => { setMode(e.target.value); setActiveChord(null); }}
+                    style={{width: '100%'}}>
+              {Object.entries(window.MT.MODES).map(([key, info]) => (
+                <option key={key} value={key}>{info.label}</option>
+              ))}
+            </select>
             <div className="row-wrap" style={{marginTop: 4}}>
               {['C','G','D','A','E','B','F#','Db','Ab','Eb','Bb','F'].map(n => (
                 <button key={n} className={`filter-chip ${rootNote === n ? 'is-on' : ''}`}
@@ -210,36 +215,40 @@ function App() {
           </div>
         </Section>
 
-        <Section title="Диатоника">
-          <div className="col" style={{gap: 4}}>
-            {diatonicChords.map((c, i) => (
-              <button key={c.name + i}
-                      className={`row ${activeChord && activeChord.root === c.root && activeChord.quality === c.quality ? 'is-active' : ''}`}
-                      onClick={() => handleChordClick({ root: c.root, type: c.quality, name: c.name })}
-                      style={{justifyContent: 'space-between', padding: '6px 8px', borderRadius: 6}}>
-                <span className="row" style={{gap: 8}}>
-                  <span className="deg-chip" style={{background: `var(--deg-${i+1})`}}>{i+1}</span>
-                  <span className="mono" style={{fontWeight: 600}}>{c.name}</span>
-                </span>
-                <span className="dim mono" style={{fontSize: 10.5}}>{c.roman}</span>
-              </button>
-            ))}
-          </div>
-        </Section>
+        {hasDiatonic && (
+          <Section title="Диатоника">
+            <div className="col" style={{gap: 4}}>
+              {diatonicChords.map((c, i) => (
+                <button key={c.name + i}
+                        className={`row ${activeChord && activeChord.root === c.root && activeChord.quality === c.quality ? 'is-active' : ''}`}
+                        onClick={() => handleChordClick({ root: c.root, type: c.quality, name: c.name })}
+                        style={{justifyContent: 'space-between', padding: '6px 8px', borderRadius: 6}}>
+                  <span className="row" style={{gap: 8}}>
+                    <span className="deg-chip" style={{background: `var(--deg-${i+1})`}}>{i+1}</span>
+                    <span className="mono" style={{fontWeight: 600}}>{c.name}</span>
+                  </span>
+                  <span className="dim mono" style={{fontSize: 10.5}}>{c.roman}</span>
+                </button>
+              ))}
+            </div>
+          </Section>
+        )}
 
-        <Section title="Втор. доминанты" subtle>
-          <div className="col" style={{gap: 4}}>
-            {secondaryDoms.map((d, i) => (
-              <button key={d.name + i}
-                      className="row"
-                      onClick={() => handleChordClick({ root: d.root, type: '7', name: d.name })}
-                      style={{justifyContent: 'space-between', padding: '6px 8px', borderRadius: 6}}>
-                <span className="mono" style={{fontWeight: 600}}>{d.name}</span>
-                <span className="dim mono" style={{fontSize: 10.5}}>{d.label}</span>
-              </button>
-            ))}
-          </div>
-        </Section>
+        {secondaryDoms.length > 0 && (
+          <Section title="Втор. доминанты" subtle>
+            <div className="col" style={{gap: 4}}>
+              {secondaryDoms.map((d, i) => (
+                <button key={d.name + i}
+                        className="row"
+                        onClick={() => handleChordClick({ root: d.root, type: '7', name: d.name })}
+                        style={{justifyContent: 'space-between', padding: '6px 8px', borderRadius: 6}}>
+                  <span className="mono" style={{fontWeight: 600}}>{d.name}</span>
+                  <span className="dim mono" style={{fontSize: 10.5}}>{d.label}</span>
+                </button>
+              ))}
+            </div>
+          </Section>
+        )}
       </aside>
 
       {/* Main pane */}
@@ -278,7 +287,7 @@ function App() {
               <Icon name={circleCollapsed ? 'chevron-right' : 'chevron-down'} />
               <span>Квинтово-квартовый круг</span>
               <span className="dim" style={{marginLeft: 'auto', textTransform: 'none', letterSpacing: 0, fontWeight: 400}}>
-                {rootNote}{mode === 'minor' ? 'm' : ''} · {mode}
+                {window.MT.keyLabel(rootNote, mode)} · {window.MT.MODES[mode].label}
               </span>
             </button>
             {!circleCollapsed && (
@@ -293,6 +302,14 @@ function App() {
                 <div className="col" style={{gap: 12}}>
                   <div>
                     <div className="sec-h" style={{margin: '0 0 8px 0'}}>Аккорды тональности</div>
+                    {!hasDiatonic && (
+                      <div className="muted" style={{
+                        fontSize: 11.5, padding: '14px 8px', border: '1px dashed var(--border)',
+                        borderRadius: 8, textAlign: 'center',
+                      }}>
+                        В пентатонике нет полного набора триад на каждой ступени.
+                      </div>
+                    )}
                     <div className="row-wrap">
                       {diatonicChords.map((c, i) => {
                         const inversions = window.MT.voicingsForChord({ root: c.root, type: c.quality }, instrument, tuning);
@@ -380,6 +397,8 @@ function App() {
           <window.ChordSearch
             instrument={instrument}
             tuning={tuning}
+            scaleNotes={scaleNotes}
+            keyName={window.MT.keyLabel(rootNote, mode)}
             onPin={handlePin}
             pinnedNames={pinnedNames}
             onChordClick={handleChordClick} />
@@ -431,19 +450,24 @@ function KeyPicker({ rootNote, mode, onChange }) {
     document.addEventListener('mousedown', onDoc);
     return () => document.removeEventListener('mousedown', onDoc);
   }, []);
+  const info = window.MT.MODES[mode];
   return (
     <div ref={ref} style={{position: 'relative'}}>
       <button className="key-pill" onClick={() => setOpen(o => !o)}>
         <span className="dot" />
-        <span>{rootNote}{mode === 'minor' ? 'm' : ''}</span>
-        <span style={{fontSize: 10, color: 'var(--text-dim)', marginLeft: 4}}>{mode}</span>
+        <span>{window.MT.keyLabel(rootNote, mode)}</span>
+        <span style={{fontSize: 10, color: 'var(--text-dim)', marginLeft: 4}}>{info.label}</span>
         <Icon name="chevron-down" size={12}/>
       </button>
       {open && (
-        <div style={{position: 'absolute', top: '100%', left: 0, marginTop: 6, background: 'var(--bg-elev)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-lg)', padding: 10, zIndex: 70, minWidth: 240}}>
-          <div className="row" style={{gap: 4, marginBottom: 8}}>
-            <button className={`filter-chip ${mode === 'major' ? 'is-on' : ''}`} onClick={() => onChange(rootNote, 'major')}>major</button>
-            <button className={`filter-chip ${mode === 'minor' ? 'is-on' : ''}`} onClick={() => onChange(rootNote, 'minor')}>minor</button>
+        <div style={{position: 'absolute', top: '100%', left: 0, marginTop: 6, background: 'var(--bg-elev)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-lg)', padding: 10, zIndex: 70, minWidth: 260}}>
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 4, marginBottom: 8}}>
+            {Object.entries(window.MT.MODES).map(([key, mi]) => (
+              <button key={key}
+                      className={`filter-chip ${mode === key ? 'is-on' : ''}`}
+                      onClick={() => onChange(rootNote, key)}
+                      style={{justifyContent: 'flex-start'}}>{mi.label}</button>
+            ))}
           </div>
           <div style={{display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4}}>
             {window.MT.NOTES_SHARP.map(n => (

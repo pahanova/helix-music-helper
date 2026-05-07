@@ -21,7 +21,10 @@ function CircleOfFifths({
   const minorOrder = window.MT.CIRCLE_MINOR;
   const segAngle = 360 / 12;
 
-  // Diatonic chord roots for the current key (set of 7 root notes)
+  const modeInfo = window.MT.MODES[mode] || window.MT.MODES.major;
+  const family = modeInfo.family;
+
+  // Diatonic chord roots for the current key (set of 7 root notes; empty for pentatonic)
   const diatonicRoots = useMemoC(() => {
     return new Set(window.MT.diatonicChords(rootNote, mode).map(c => c.root));
   }, [rootNote, mode]);
@@ -66,7 +69,7 @@ function CircleOfFifths({
         {/* Outer ring — major keys */}
         {slices.map(({ i, startA, endA }) => {
           const note = majorOrder[i];
-          const isCurrent = mode === 'major' && note === rootNote;
+          const isCurrent = family === 'major' && note === rootNote;
           const dia = diatonicByRoot[note];
           const isDiatonic = !!dia && dia.quality !== 'min' && dia.quality !== 'dim';
           const isSecondary = secondaryDoms.has(note) && !isDiatonic && !isCurrent;
@@ -92,7 +95,7 @@ function CircleOfFifths({
         {slices.map(({ i, startA, endA }) => {
           const note = minorOrder[i].replace('m', '');
           const fullName = minorOrder[i];
-          const isCurrent = mode === 'minor' && note === rootNote;
+          const isCurrent = family === 'minor' && note === rootNote;
           const dia = diatonicByRoot[note];
           const isDiatonic = !!dia && (dia.quality === 'min' || dia.quality === 'dim');
           let fill = 'var(--bg-muted)';
@@ -107,8 +110,8 @@ function CircleOfFifths({
         })}
         {/* Inner disc */}
         <circle cx={cx} cy={cy} r={innerR - 1} fill="var(--bg)" stroke="var(--border)" />
-        <text x={cx} y={cy - 4} textAnchor="middle" className="cof-center-key">{rootNote}{mode === 'minor' ? 'm' : ''}</text>
-        <text x={cx} y={cy + 12} textAnchor="middle" className="cof-center-mode">{mode}</text>
+        <text x={cx} y={cy - 4} textAnchor="middle" className="cof-center-key">{window.MT.keyLabel(rootNote, mode)}</text>
+        <text x={cx} y={cy + 12} textAnchor="middle" className="cof-center-mode">{window.MT.MODES[mode] ? window.MT.MODES[mode].label : mode}</text>
 
         {/* Labels */}
         {slices.map(({ i }) => {

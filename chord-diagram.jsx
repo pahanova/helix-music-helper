@@ -57,7 +57,7 @@ function ChordDiagram({ shape, name, frets = 5, width = 120, height = 130, sourc
 
       {/* Fingerings */}
       {positions.filter(p => p.fret > 0).map((p, idx) => {
-        const cy = fretY(p.fret - baseFret) - (h / frets) / 2;
+        const cy = fretY(p.fret - baseFret) + (h / frets) / 2;
         return (
           <g key={`p-${idx}`}>
             <circle cx={stringX(p.string)} cy={cy} r="6.5" fill="var(--text)" />
@@ -82,7 +82,7 @@ function ChordDiagram({ shape, name, frets = 5, width = 120, height = 130, sourc
         const samePos = positions.filter(p => p.fret === parseInt(barreFret));
         const minS = Math.min(...samePos.map(p => p.string));
         const maxS = Math.max(...samePos.map(p => p.string));
-        const cy = fretY(parseInt(barreFret) - baseFret) - (h / frets) / 2;
+        const cy = fretY(parseInt(barreFret) - baseFret) + (h / frets) / 2;
         return (
           <rect x={stringX(minS) - 3} y={cy - 3} width={stringX(maxS) - stringX(minS) + 6} height="6"
                 rx="3" fill="var(--text)" opacity="0.85" />

@@ -20,7 +20,7 @@ const EMPTY_SPEC = {
   omit5: false,
 };
 
-function ChordSearch({ instrument, tuning, onPin, pinnedNames, onChordClick }) {
+function ChordSearch({ instrument, tuning, scaleNotes, keyName, onPin, pinnedNames, onChordClick }) {
   const [tab, setTab] = useS('notes'); // 'notes' | 'position'
   const [spec, setSpec] = useS(EMPTY_SPEC);
   const [nameOpen, setNameOpen] = useS(false);
@@ -51,6 +51,7 @@ function ChordSearch({ instrument, tuning, onPin, pinnedNames, onChordClick }) {
       {nameOpen && (
         <NameSearch q={nameQ} setQ={setNameQ}
                     instrument={instrument} tuning={tuning}
+                    scaleNotes={scaleNotes} keyName={keyName}
                     onPin={onPin} pinnedNames={pinnedNames} onChordClick={onChordClick} />
       )}
 
@@ -58,6 +59,7 @@ function ChordSearch({ instrument, tuning, onPin, pinnedNames, onChordClick }) {
         <Constructor spec={spec} setSpec={setSpec} update={update} setEnum={setEnum}
                      built={built}
                      instrument={instrument} tuning={tuning}
+                     scaleNotes={scaleNotes} keyName={keyName}
                      onPin={onPin} pinnedNames={pinnedNames} onChordClick={onChordClick} />
       )}
 
@@ -68,7 +70,7 @@ function ChordSearch({ instrument, tuning, onPin, pinnedNames, onChordClick }) {
 
 /* ─── Constructor ───────────────────────────────────────────── */
 
-function Constructor({ spec, setSpec, update, setEnum, built, instrument, tuning, onPin, pinnedNames, onChordClick }) {
+function Constructor({ spec, setSpec, update, setEnum, built, instrument, tuning, scaleNotes, keyName, onPin, pinnedNames, onChordClick }) {
   const fifthForced = spec.quality === 'dim' || spec.quality === 'aug';
   const susOn = !!spec.sus;
   const isPower = spec.quality === '5';
@@ -182,6 +184,7 @@ function Constructor({ spec, setSpec, update, setEnum, built, instrument, tuning
 
       <ConstructorResult built={built}
                          instrument={instrument} tuning={tuning}
+                         scaleNotes={scaleNotes} keyName={keyName}
                          onPin={onPin} pinnedNames={pinnedNames} onChordClick={onChordClick} />
     </div>
   );
@@ -200,7 +203,7 @@ function Group({ label, hint, right, children }) {
   );
 }
 
-function ConstructorResult({ built, instrument, tuning, onPin, pinnedNames, onChordClick }) {
+function ConstructorResult({ built, instrument, tuning, scaleNotes, keyName, onPin, pinnedNames, onChordClick }) {
   if (!built) {
     return (
       <div className="muted" style={{
@@ -214,16 +217,18 @@ function ConstructorResult({ built, instrument, tuning, onPin, pinnedNames, onCh
   // Determine type — try to round-trip via a simple lookup against CHORD_TYPES based on intervals.
   const baseChord = { root: built.root, type: deriveTypeFromBuilt(built), name: built.name, notes: built.notes };
   const inversions = window.MT.voicingsForChord(baseChord, instrument, tuning);
+  const inScale = window.MT.isChordInScale(built.notes, scaleNotes);
 
   return (
     <div className="constructor-result">
-      <div className="row" style={{gap: 4, flexWrap: 'wrap', marginBottom: 8}}>
+      <div className="row" style={{gap: 4, flexWrap: 'wrap', marginBottom: 8, alignItems: 'center'}}>
         {built.notes.map((n, i) => (
           <span key={i} className="note-pill">
             <span className="note-pill-deg">{built.labels[i]}</span>
             <span className="mono">{n}</span>
           </span>
         ))}
+        {inScale && <InKeyBadge keyName={keyName} />}
       </div>
       {inversions.length === 0 ? (
         <div className="dim" style={{fontSize: 11, marginTop: 8, textAlign: 'center'}}>
@@ -260,10 +265,11 @@ function deriveTypeFromBuilt(built) {
 
 /* ─── Voicing card (used everywhere a chord+inversion shows up) ─── */
 
-function VoicingCard({ chord, inversion, instrument, tuning, pinnedNames, onPin, onChordClick, layout = 'card' }) {
+function VoicingCard({ chord, inversion, instrument, tuning, scaleNotes, keyName, pinnedNames, onPin, onChordClick, layout = 'card' }) {
   const { fullName, voicing, source, label, bassNote } = inversion;
   const pinned = pinnedNames && pinnedNames.includes(fullName);
   const chordObj = { ...chord, name: fullName, bassNote, notes: chord.notes };
+  const inScale = window.MT.isChordInScale(chord.notes, scaleNotes);
 
   const diag = voicing.kind === 'piano'
     ? <window.PianoChordDiagram voicing={voicing} name="" width={layout === 'row' ? 180 : 124} height={layout === 'row' ? 80 : 70} />
@@ -297,10 +303,13 @@ function VoicingCard({ chord, inversion, instrument, tuning, pinnedNames, onPin,
 
   // Default card layout (used in NameSearch grid)
   return (
-    <div className={`chord-card ${pinned ? 'is-pinned' : ''}`}
+    <div className={`chord-card ${pinned ? 'is-pinned' : ''} ${inScale ? 'is-in-key' : ''}`}
          onClick={() => onChordClick && onChordClick(chordObj)}>
       <div className="chord-name">
-        <span>{fullName}</span>
+        <span className="row" style={{gap: 6, alignItems: 'center'}}>
+          <span>{fullName}</span>
+          {inScale && <InKeyDot keyName={keyName} />}
+        </span>
         <button className="btn-ghost"
                 onClick={(e) => { e.stopPropagation(); onPin && onPin(chordObj); }}
                 style={{padding: 2, color: pinned ? 'var(--text)' : 'var(--text-dim)'}}
@@ -318,7 +327,7 @@ function VoicingCard({ chord, inversion, instrument, tuning, pinnedNames, onPin,
 
 /* ─── Compact "by name" search ──────────────────────────────── */
 
-function NameSearch({ q, setQ, instrument, tuning, onPin, pinnedNames, onChordClick }) {
+function NameSearch({ q, setQ, instrument, tuning, scaleNotes, keyName, onPin, pinnedNames, onChordClick }) {
   const all = useM(() => {
     const list = [];
     window.MT.NOTES_SHARP.forEach(root => {
@@ -366,6 +375,8 @@ function NameSearch({ q, setQ, instrument, tuning, onPin, pinnedNames, onChordCl
                            inversion={inv}
                            instrument={instrument}
                            tuning={tuning}
+                           scaleNotes={scaleNotes}
+                           keyName={keyName}
                            pinnedNames={pinnedNames}
                            onPin={onPin}
                            onChordClick={onChordClick} />
@@ -398,6 +409,30 @@ function SearchIcon({ dim }) {
          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
          style={dim ? {color: 'var(--text-dim)'} : {}}>
       <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+    </svg>
+  );
+}
+
+function InKeyBadge({ keyName }) {
+  return (
+    <span className="in-key-badge" title={keyName ? `Все ноты в тональности ${keyName}` : 'Все ноты в текущей тональности'}>
+      <CheckIcon />
+      <span>в тональности</span>
+    </span>
+  );
+}
+
+function InKeyDot({ keyName }) {
+  return (
+    <span className="in-key-dot" title={keyName ? `Все ноты в тональности ${keyName}` : 'Все ноты в текущей тональности'} />
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 6 9 17l-5-5"/>
     </svg>
   );
 }

@@ -39,6 +39,10 @@
   --secondary: oklch(0.65 0.06 280);
   --secondary-bg: oklch(0.97 0.015 280);
 
+  /* In-key accent (chord fully fits the current scale) */
+  --in-key:    oklch(0.55 0.14 150);
+  --in-key-bg: oklch(0.95 0.05 150);
+
   --r-sm: 4px;
   --r-md: 6px;
   --r-lg: 10px;
@@ -81,6 +85,9 @@
 
   --secondary: oklch(0.7 0.06 280);
   --secondary-bg: oklch(0.24 0.02 280);
+
+  --in-key:    oklch(0.74 0.14 150);
+  --in-key-bg: oklch(0.26 0.06 150);
 }
 
 * { box-sizing: border-box; }
@@ -328,6 +335,29 @@ input:focus, select:focus {
 .pane-left::-webkit-scrollbar-thumb:hover, .pane-right::-webkit-scrollbar-thumb:hover, .pane-main::-webkit-scrollbar-thumb:hover {
   background: var(--border-strong);
 }
+
+/* In-key indicators */
+.in-key-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--in-key-bg);
+  border: 1px solid var(--in-key);
+  color: var(--in-key);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  user-select: none;
+}
+.in-key-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--in-key);
+  flex-shrink: 0;
+}
+.chord-card.is-in-key { border-color: var(--in-key); }
 
 /* Utility */
 .row { display: flex; align-items: center; gap: 6px; }
