@@ -1,0 +1,52 @@
+/* src/features/pinned/pinned.css — pinned chords bar (toggle + strip),
+   extracted verbatim from the prototype's circle.css. */
+
+.pinned-bar {
+  border-top: 1px solid var(--border);
+  background: var(--bg-muted);
+  flex-shrink: 0;
+}
+.pinned-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  width: 100%;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+}
+.pinned-toggle:hover {
+  color: var(--text);
+  background: var(--bg-hover);
+}
+.pinned-count {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0;
+  color: var(--text-dim);
+  margin-left: auto;
+  text-transform: none;
+}
+.pinned-strip {
+  display: flex;
+  gap: 8px;
+  padding: 0 14px 10px;
+  overflow-x: auto;
+}
+.pinned-strip-empty {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  padding: 18px;
+  width: 100%;
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: var(--r-md);
+}
