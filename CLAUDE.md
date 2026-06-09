@@ -12,7 +12,7 @@
 
 ## Музыкальная теория — критична
 
-Перед изменением любой логики в `music-theory.js` (или в компонентах, которые её используют — диатонические триады, вторичные доминанты, интервалы аккордов, гаммы) **сверяйся с источниками**:
+Перед изменением любой логики в `src/theory/` (или в компонентах, которые её используют — диатонические триады, вторичные доминанты, интервалы аккордов, гаммы) **сверяйся с источниками**:
 
 - Качество аккорда (maj/min/dim) на каждой ступени корректно для лада.
 - Энгармонические замены (Bb vs A#, Gb vs F#) выбраны логично для контекста тональности.
@@ -24,55 +24,62 @@
 ## Запуск
 
 ```bash
-python3 -m http.server 8765
-# открыть http://127.0.0.1:8765/
+npm install
+npm run dev        # Vite dev server, http://localhost:5173/
+npm run build      # прод-сборка в dist/
 ```
 
-`file://` не работает — Babel-standalone требует HTTP, чтобы загрузить `<script type="text/babel" src=...>`.
+Если IPv6-loopback блокируется (встречается на этой Windows-машине): `npm run dev -- --host 127.0.0.1`.
 
-## Архитектурные заметки
+## Архитектура и стиль кода
 
-- **Стек:** HTML + React 18 (UMD) + Babel Standalone, без сборки. Это сознательное решение — прототип должен открываться в браузере без `npm install`. Любые большие архитектурные изменения (bundler, TypeScript, tooling) — согласовывай с пользователем заранее.
-- **Музыкальная логика** — в `music-theory.js`, доступ через `window.MT`. Если меняешь сигнатуру — обнови всех потребителей.
-- **Компоненты** регистрируются через `window.<Name>` (например, `window.Instrument`, `window.CircleOfFifths`).
-- **Состояние** — в `App` через `useState`. Глобального стора нет.
-- **Tweaks-панель** общается с хостом по протоколу `__edit_mode_*` через `postMessage`; вне Claude Design она просто работает локально.
-- **SRI hashes** в `<script>` тегах CDN намеренно убраны — оригинальные из дизайн-бандла не совпадают с тем, что отдаёт unpkg, и блокируют загрузку. Не возвращай их без необходимости.
+- **Стек:** Vite + React 18 + ES modules, plain JS/JSX (без TypeScript). Переход на TS или другие крупные изменения тулинга — согласовывай с пользователем заранее.
+- **Модули по владению функционалом:** каждая фича владеет своими компонентами И своим CSS (`src/features/<имя>/`). Чистая логика (теория, аудио) отделена от React. Не размазывай стили чужой фичи по своим файлам.
+- **Компоненты — не более 4 уровней отступа** внутри функции: глубокий JSX выноси в подкомпоненты, map-колбэки — в отдельные компоненты, вложенные условия — в ранние return.
+- **Музыкальная логика** — в `src/theory/` (именованные экспорты через `src/theory/index.js`). Если меняешь сигнатуру — обнови всех потребителей.
+- **Состояние** — в `App` (`src/app/App.jsx`) через `useState`. Глобального стора нет.
+- **Tweaks-панель** (`src/tweaks/`) общается с хостом по протоколу `__edit_mode_*` через `postMessage`; вне Claude Design она просто инертна.
+- Эталонные скриншоты прототипа до переписывания — `docs/screenshots-baseline/`, скриншоты приёмки — `docs/screenshots-rewrite/`, спецификация миграции — `docs/REWRITE-SPEC.md`. Старый no-build код доступен на ветке `master` до слияния.
 
 ## Структура файлов
 
 ```
-index.html              — точка входа
-styles.css              — токены дизайна, базовые стили, лейаут
-instrument.css          — гриф + фортепиано
-circle.css              — круг + диаграммы аккордов + поисковик
-music-theory.js         — гаммы, аккорды, тюнинги, identifyChord, генератор войсингов и инверсий
-chord-shapes-data.js    — курированная гитарная БД из chords-db (≈300 аппликатур), сгенерированный артефакт
-audio.js                — `window.HelixAudio`: soundfont-player + MusyngKite, MIDI-хелперы, playNote/playChord
-tweaks-panel.jsx        — Tweaks-шелл и контролы
-instrument.jsx          — Fretboard / Piano / Instrument shell
-circle.jsx              — CircleOfFifths
-chord-diagram.jsx       — мини-диаграмма аппликатуры (гриф) + 20 базовых форм для совместимости
-piano-chord-diagram.jsx — мини-диаграмма клавиатуры с подсветкой нот аккорда
-chord-search.jsx        — поиск по имени/нотам/позиции, VoicingCard (рендерит правильную диаграмму по инструменту)
-app.jsx                 — App, топбар, панели, закреплённые
-scripts/build-chord-shapes.js — пересборка chord-shapes-data.js из chords-db (`node scripts/build-chord-shapes.js`)
+index.html                    — точка входа Vite (шрифты, #root)
+src/
+  main.jsx                    — createRoot + импорт styles.css
+  styles.css                  — design-токены, темы, лейаут, топбар, общие карточки/чипы
+  theory/                     — чистая музыкальная логика, ноль React (вход: index.js)
+    notes.js, scales.js, chords.js, tunings.js, circle-of-fifths.js,
+    piano-layout.js, voicings.js — гаммы, аккорды, identifyChord, генератор войсингов
+    chord-shapes-data.js      — курированная гитарная БД из chords-db (~300 форм), сгенерированный артефакт
+  audio/index.js              — soundfont-player + MusyngKite, MIDI-хелперы, playNote/playChord
+  ui/pulse.js                 — flashPulse (анимация .is-played)
+  app/                        — App (состояние+композиция), TopBar, KeyPicker, LeftPanel,
+                                CenterColumn, CircleSection, RightPanel, AppTweaks, Section, Icon, useNarrow
+  features/
+    instrument/               — Fretboard / Piano / Instrument shell + instrument.css
+    circle/                   — CircleOfFifths (SVG-круг) + circle.css
+    diagrams/                 — ChordDiagram, PianoChordDiagram, fallback-формы + diagrams.css
+    search/                   — ChordSearch, Constructor, NameSearch, VoicingCard + search.css
+    pinned/                   — PinnedBar + pinned.css
+  tweaks/                     — useTweaks, TweaksPanel, контролы
+scripts/build-chord-shapes.js — пересборка chord-shapes-data.js из chords-db (npm run build:chord-shapes)
 ```
 
 ## Звук
 
-- **Стек:** `soundfont-player` (CDN unpkg) + сэмплы MusyngKite (`gleitz/midi-js-soundfonts`). Лицензии MIT/CC, никаких локальных файлов сэмплов. Семпл текущего инструмента подгружается лениво, кэшируется.
-- **Карта инструментов:** `guitar → acoustic_guitar_steel`, `bass → electric_bass_finger`, `piano → acoustic_grand_piano` — в `audio.js → INSTRUMENT_TO_SF`.
-- **MIDI:** `HelixAudio.tuningOpenMidis(tuning, instrument)` назначает абсолютный MIDI каждой открытой струне (anchor: гитара E2 = 40, бас B0 = 23; следующая струна — минимальный pitch выше предыдущей с нужным pitch class). Для пианино — `noteToMidi(name, octave)` (C4 = 60).
+- **Стек:** `soundfont-player` (npm) + сэмплы MusyngKite (`gleitz/midi-js-soundfonts`). Лицензии MIT/CC, никаких локальных файлов сэмплов. Сэмпл текущего инструмента подгружается лениво, кэшируется.
+- **Карта инструментов:** `guitar → acoustic_guitar_steel`, `bass → electric_bass_finger`, `piano → acoustic_grand_piano` — в `src/audio/index.js → INSTRUMENT_TO_SF`.
+- **MIDI:** `tuningOpenMidis(tuning, instrument)` назначает абсолютный MIDI каждой открытой струне (anchor: гитара E2 = 40, бас B0 = 23; следующая струна — минимальный pitch выше предыдущей с нужным pitch class). Для пианино — `noteToMidi(name, octave)` (C4 = 60).
 - **Точки входа:**
-  - `Instrument` shell в `instrument.jsx` пробрасывает `playMidi` в Fretboard/Piano; cell/key click вызывает `HelixAudio.playNote(instrument, midi)`.
-  - `handleChordClick(chord, voicing?)` в `app.jsx` — все клики по карточкам идут сюда. Когда воизинг известен (карточка инверсии в поиске, закреплённый, мини-карточка диатоники) — играем именно его MIDI через `voicingToMidis`. Иначе — root-инверсия из `voicingsForChord`. Крайний фолбэк (нет играбельной формы вообще) — синтез из `CHORD_TYPES[type]` в дефолтной октаве.
-- **Pulse-анимация:** `window.flashPulse(el)` (определена в `app.jsx`) добавляет класс `.is-played`, кейфреймы в `styles.css`. Используется на всех кликах (карточки, ноты грифа, клавиши пианино, строки диатоники).
+  - `Instrument` shell пробрасывает `playMidi` в Fretboard/Piano; cell/key click вызывает `playNote(instrument, midi)`.
+  - `handleChordClick(chord, voicing?)` в `src/app/App.jsx` — все клики по карточкам идут сюда. Когда воизинг известен (карточка инверсии в поиске, закреплённый, мини-карточка диатоники) — играем именно его MIDI через `voicingToMidis`. Иначе — root-инверсия из `voicingsForChord`. Крайний фолбэк (нет играбельной формы вообще) — синтез из `CHORD_TYPES[type]` в дефолтной октаве.
+- **Pulse-анимация:** `flashPulse(el)` из `src/ui/pulse.js` добавляет класс `.is-played`, кейфреймы в `src/styles.css`. Используется на всех кликах (карточки, ноты грифа, клавиши пианино, строки диатоники).
 - **Топбар:** чип `аккорд / арпеджио` (`chordPlayMode`), кнопка mute (`audioMuted`). Mute не отключает clicks — только воспроизведение.
 
 ## Воркфлоу аппликатур и обращений
 
-- `window.MT.voicingsForChord(chord, instrument, tuning)` — основная точка входа. Возвращает массив инверсий (root/1st/2nd/3rd, до 4 для септаккордов), у каждой — `voicing` (форма для рендера) и `source` (`'curated'` | `'auto'`).
-- На гитаре в standard tuning сначала ищется курированная форма в `window.CHORD_SHAPES_DB` (по имени с учётом slash); если не нашлось — генератор подбирает играбельный войсинг.
+- `voicingsForChord(chord, instrument, tuning)` из `src/theory/` — основная точка входа. Возвращает массив инверсий (root/1st/2nd/3rd, до 4 для септаккордов), у каждой — `voicing` (форма для рендера) и `source` (`'curated'` | `'auto'`).
+- На гитаре в standard tuning сначала ищется курированная форма в `chord-shapes-data.js` (по имени с учётом slash); если не нашлось — генератор подбирает играбельный войсинг.
 - На басу/пианино/нестандартном строе — всегда генератор; для баса `allowBarre: false`.
 - Скоринг генератора: `Math.max(0, lowFret - 3) * 1` (низкие позиции свободно, выше — пенальти) + `span * 1.5` + `internalMutes * 4` + бонус за полноту (≥5 струн). Менять с осторожностью — настроено под играбельность популярных аккордов.
