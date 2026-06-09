@@ -4,40 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Helix · Music helper</title>
+<link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="instrument.css">
-<link rel="stylesheet" href="circle.css">
-<style>
-/* density */
-.density-compact .sec { margin-bottom: 12px; }
-.density-compact .pane-left, .density-compact .pane-right { padding: 10px 10px; }
-.density-compact .chord-card { width: 108px; padding: 8px; }
-.density-compact .pinned-strip { padding: 8px 12px; }
-
-/* Instrument is-active state for diatonic chord buttons */
-.is-active.row { background: var(--bg-active); }
-</style>
 </head>
 <body>
 <div id="root"></div>
-
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/soundfont-player@0.12.0/dist/soundfont-player.js" crossorigin="anonymous"></script>
-
-<script src="music-theory.js"></script>
-<script src="chord-shapes-data.js"></script>
-<script src="audio.js"></script>
-<script type="text/babel" src="tweaks-panel.jsx"></script>
-<script type="text/babel" src="instrument.jsx"></script>
-<script type="text/babel" src="circle.jsx"></script>
-<script type="text/babel" src="chord-diagram.jsx"></script>
-<script type="text/babel" src="piano-chord-diagram.jsx"></script>
-<script type="text/babel" src="chord-search.jsx"></script>
-<script type="text/babel" src="app.jsx"></script>
+<script type="module" src="/src/main.jsx"></script>
 </body>
 </html>
