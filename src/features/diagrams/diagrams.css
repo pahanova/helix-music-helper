@@ -1,0 +1,29 @@
+/* features/diagrams — мини-диаграммы аккордов (гриф + клавиатура) */
+
+/* Chord diagram (mini fretboard inside cards) */
+.diag { display: block; }
+.chord-card .diag {
+  width: 100%;
+  height: 64px;
+}
+.diag-name {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* Лейбл "Nfr" на смещённых формах. Правило идентично .cof-roman
+   в features/circle/circle.css (римские цифры круга) — продублировано,
+   чтобы диаграммы были самодостаточны. */
+.cof-roman {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  fill: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Piano chord diagram tweaks */
+.chord-card .piano-diag {
+  width: 100%;
+  height: auto;
+}

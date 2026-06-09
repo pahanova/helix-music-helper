@@ -1,0 +1,108 @@
+/* src/features/search/search.css — chord search panel styles, extracted from
+   the prototype's circle.css (search-owned rules only).
+   NOT here on purpose (owned by other layers):
+   - base .filter-chip / .filter-chip.is-on — shared with app (capo, key roots) → app layer;
+   - .chord-card / .chord-name / .chord-roman / .in-key-* / .btn-ghost / .row / .col /
+     .muted / .dim / .mono — global styles.css;
+   - .inst-tabs — instrument.css;
+   - .chord-card .diag / .chord-card .piano-diag — diagrams layer. */
+
+/* Search bar («Поиск по имени») */
+.search-bar {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 6px 10px;
+}
+.search-bar input {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+.search-bar input:focus { background: transparent; border: 0; }
+.filter-row {
+  display: flex; flex-wrap: wrap; gap: 4px;
+}
+
+/* Search results grid */
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+  gap: 8px;
+}
+
+/* Constructor (chord-by-notes) */
+.root-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+}
+.root-grid .filter-chip {
+  text-align: center;
+  padding: 6px 0;
+  font-size: 12px;
+}
+.filter-chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.chip-sep {
+  display: inline-block;
+  width: 1px;
+  height: 14px;
+  background: var(--border);
+  margin: 0 4px;
+  align-self: center;
+}
+
+.constructor-result {
+  background: var(--bg-elev);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  padding: 12px;
+  margin-top: 4px;
+}
+
+/* Voicing row — used in Constructor result for stacking inversions */
+.voicing-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  cursor: pointer;
+  transition: border-color 80ms ease, background 80ms ease;
+}
+.voicing-row:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-muted);
+}
+
+/* Formula pills in the constructor result («R C · 3 E · 5 G») */
+.note-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px 2px 4px;
+  border-radius: 999px;
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  font-size: 11px;
+}
+.note-pill-deg {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg);
+  border-radius: 999px;
+  padding: 0 4px;
+  min-width: 14px;
+  text-align: center;
+}
