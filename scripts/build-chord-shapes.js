@@ -1,18 +1,21 @@
 #!/usr/bin/env node
 // build-chord-shapes.js
 // Fetches tombatossals/chords-db (MIT) guitar dataset and bakes a curated subset
-// into ../chord-shapes-data.js. Run once when refreshing the curated DB.
+// into ../src/theory/chord-shapes-data.js (ES module). Run once when refreshing the curated DB.
 //
 //   node scripts/build-chord-shapes.js
 //
 // Source: https://cdn.jsdelivr.net/npm/@tombatossals/chords-db/lib/guitar.json
 
-const fs = require('fs');
-const path = require('path');
-const https = require('https');
+import fs from 'node:fs';
+import path from 'node:path';
+import https from 'node:https';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const SRC = 'https://cdn.jsdelivr.net/npm/@tombatossals/chords-db/lib/guitar.json';
-const OUT = path.join(__dirname, '..', 'chord-shapes-data.js');
+const OUT = path.join(__dirname, '..', 'src', 'theory', 'chord-shapes-data.js');
 
 // Their object keys spell sharps as "Csharp" / "Fsharp" (filename-safe) and use
 // flats elsewhere; we use sharps everywhere internally.
@@ -128,7 +131,7 @@ function bassNoteFor(suffix, rootKey) {
     '// Each entry: { positions: [{string, fret, finger}], baseFret, bassNote }',
     '// String index 0 = low E, 5 = high E. Frets are absolute (subtract baseFret for diagram offset).',
     '',
-    `window.CHORD_SHAPES_DB = ${json};`,
+    `export default ${json};`,
     '',
   ].join('\n');
 
