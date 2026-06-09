@@ -1,8 +1,10 @@
 // src/app/LeftPanel.jsx — left panel: instrument picker / tuning + capo /
 // key (mode + circle-of-fifths roots) / diatonic rows / secondary dominants.
+// Sections subscribe to the store themselves; leaf rows stay presentational.
 
 import { MODES } from '../theory/index.js';
 import { flashPulse } from '../ui/pulse.js';
+import { useStore, useTuning, useTuningOptions, useDiatonicChords, useSecondaryDoms } from '../store/index.js';
 import Section from './Section.jsx';
 
 // Left-panel roots follow the circle of fifths WITH flats —
@@ -18,11 +20,13 @@ function InstrumentTab({ id, instrument, onSelect }) {
   );
 }
 
-function InstrumentPicker({ instrument, onSelect }) {
+function InstrumentPicker() {
+  const instrument = useStore(s => s.instrument);
+  const selectInstrument = useStore(s => s.selectInstrument);
   return (
     <Section title="Инструмент">
       <div className="inst-tabs" style={{width: '100%', justifyContent: 'space-between', display: 'flex'}}>
-        {['guitar', 'bass', 'piano'].map(i => <InstrumentTab key={i} id={i} instrument={instrument} onSelect={onSelect} />)}
+        {['guitar', 'bass', 'piano'].map(i => <InstrumentTab key={i} id={i} instrument={instrument} onSelect={selectInstrument} />)}
       </div>
     </Section>
   );
@@ -35,7 +39,9 @@ function CapoChip({ fret, capoFret, onSetCapo }) {
   );
 }
 
-function CapoControl({ capoFret, onSetCapo }) {
+function CapoControl() {
+  const capoFret = useStore(s => s.capoFret);
+  const setCapo = useStore(s => s.setCapo);
   return (
     <div style={{marginTop: 12}}>
       <div className="row" style={{justifyContent: 'space-between'}}>
@@ -43,22 +49,27 @@ function CapoControl({ capoFret, onSetCapo }) {
         <span className="mono tnum" style={{fontSize: 11}}>{capoFret > 0 ? `${capoFret}fr` : 'нет'}</span>
       </div>
       <div className="row" style={{gap: 4, marginTop: 6, flexWrap: 'wrap'}}>
-        {[0,1,2,3,4,5,7].map(f => <CapoChip key={f} fret={f} capoFret={capoFret} onSetCapo={onSetCapo} />)}
+        {[0,1,2,3,4,5,7].map(f => <CapoChip key={f} fret={f} capoFret={capoFret} onSetCapo={setCapo} />)}
       </div>
     </div>
   );
 }
 
-function TuningSection({ instrument, tuningName, onSelectTuning, tuningOptions, tuning, capoFret, onSetCapo }) {
+function TuningSection() {
+  const instrument = useStore(s => s.instrument);
+  const tuningName = useStore(s => s.tuningName);
+  const selectTuning = useStore(s => s.selectTuning);
+  const tuningOptions = useTuningOptions();
+  const tuning = useTuning();
   return (
     <Section title="Строй">
-      <select value={tuningName} onChange={e => onSelectTuning(e.target.value)} style={{width: '100%'}}>
+      <select value={tuningName} onChange={e => selectTuning(e.target.value)} style={{width: '100%'}}>
         {tuningOptions.map(t => <option key={t}>{t}</option>)}
       </select>
       <div className="tuning-pills" style={{marginTop: 8}}>
         {[...tuning].reverse().map((n, i) => <span key={i} className="tp">{n}</span>)}
       </div>
-      {instrument === 'guitar' && <CapoControl capoFret={capoFret} onSetCapo={onSetCapo} />}
+      {instrument === 'guitar' && <CapoControl />}
     </Section>
   );
 }
@@ -87,12 +98,16 @@ function RootChips({ rootNote, onSelectRoot }) {
   );
 }
 
-function KeySection({ mode, rootNote, onSelectMode, onSelectRoot }) {
+function KeySection() {
+  const mode = useStore(s => s.mode);
+  const rootNote = useStore(s => s.rootNote);
+  const selectMode = useStore(s => s.selectMode);
+  const selectRoot = useStore(s => s.selectRoot);
   return (
     <Section title="Тональность">
       <div className="col" style={{gap: 6}}>
-        <ModeSelect mode={mode} onSelectMode={onSelectMode} />
-        <RootChips rootNote={rootNote} onSelectRoot={onSelectRoot} />
+        <ModeSelect mode={mode} onSelectMode={selectMode} />
+        <RootChips rootNote={rootNote} onSelectRoot={selectRoot} />
       </div>
     </Section>
   );
@@ -113,11 +128,14 @@ function DiatonicRow({ c, i, activeChord, onChordClick }) {
   );
 }
 
-function DiatonicSection({ diatonicChords, activeChord, onChordClick }) {
+function DiatonicSection() {
+  const diatonicChords = useDiatonicChords();
+  const activeChord = useStore(s => s.activeChord);
+  const playChord = useStore(s => s.playChord);
   return (
     <Section title="Диатоника">
       <div className="col" style={{gap: 4}}>
-        {diatonicChords.map((c, i) => <DiatonicRow key={c.name + i} c={c} i={i} activeChord={activeChord} onChordClick={onChordClick} />)}
+        {diatonicChords.map((c, i) => <DiatonicRow key={c.name + i} c={c} i={i} activeChord={activeChord} onChordClick={playChord} />)}
       </div>
     </Section>
   );
@@ -134,32 +152,30 @@ function SecondaryDomRow({ d, onChordClick }) {
   );
 }
 
-function SecondaryDomsSection({ secondaryDoms, onChordClick }) {
+function SecondaryDomsSection() {
+  const secondaryDoms = useSecondaryDoms();
+  const playChord = useStore(s => s.playChord);
   return (
     <Section title="Втор. доминанты" subtle>
       <div className="col" style={{gap: 4}}>
-        {secondaryDoms.map((d, i) => <SecondaryDomRow key={d.name + i} d={d} onChordClick={onChordClick} />)}
+        {secondaryDoms.map((d, i) => <SecondaryDomRow key={d.name + i} d={d} onChordClick={playChord} />)}
       </div>
     </Section>
   );
 }
 
-export default function LeftPanel({
-  open, instrument, onSelectInstrument,
-  tuningName, onSelectTuning, tuningOptions, tuning, capoFret, onSetCapo,
-  mode, rootNote, onSelectMode, onSelectRoot,
-  diatonicChords, secondaryDoms, hasDiatonic, activeChord, onChordClick,
-}) {
+export default function LeftPanel() {
+  const open = useStore(s => s.leftOpen);
+  const instrument = useStore(s => s.instrument);
+  const hasDiatonic = useDiatonicChords().length > 0;
+  const hasSecondaryDoms = useSecondaryDoms().length > 0;
   return (
     <aside className={`pane-left ${open ? 'is-open' : ''}`}>
-      <InstrumentPicker instrument={instrument} onSelect={onSelectInstrument} />
-      {instrument !== 'piano' && (
-        <TuningSection instrument={instrument} tuningName={tuningName} onSelectTuning={onSelectTuning}
-                       tuningOptions={tuningOptions} tuning={tuning} capoFret={capoFret} onSetCapo={onSetCapo} />
-      )}
-      <KeySection mode={mode} rootNote={rootNote} onSelectMode={onSelectMode} onSelectRoot={onSelectRoot} />
-      {hasDiatonic && <DiatonicSection diatonicChords={diatonicChords} activeChord={activeChord} onChordClick={onChordClick} />}
-      {secondaryDoms.length > 0 && <SecondaryDomsSection secondaryDoms={secondaryDoms} onChordClick={onChordClick} />}
+      <InstrumentPicker />
+      {instrument !== 'piano' && <TuningSection />}
+      <KeySection />
+      {hasDiatonic && <DiatonicSection />}
+      {hasSecondaryDoms && <SecondaryDomsSection />}
     </aside>
   );
 }

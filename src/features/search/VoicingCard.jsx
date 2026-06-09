@@ -6,10 +6,15 @@ import ChordDiagram from '../diagrams/ChordDiagram.jsx';
 import PianoChordDiagram from '../diagrams/PianoChordDiagram.jsx';
 import { isChordInScale } from '../../theory/index.js';
 import { flashPulse } from '../../ui/pulse.js';
+import { useStore, useScaleNotes, useKeyName } from '../../store/index.js';
 
-export default function VoicingCard({ chord, inversion, instrument, tuning, scaleNotes, keyName, pinnedNames, onPin, onChordClick, layout = 'card' }) {
+export default function VoicingCard({ chord, inversion, layout = 'card' }) {
   const { fullName, voicing, source, label, bassNote } = inversion;
-  const pinned = pinnedNames && pinnedNames.includes(fullName);
+  const scaleNotes = useScaleNotes();
+  const keyName = useKeyName();
+  const pinned = useStore(s => s.pinned.some(p => p.name === fullName));
+  const playChord = useStore(s => s.playChord);
+  const togglePin = useStore(s => s.togglePin);
   const chordObj = { ...chord, name: fullName, bassNote, notes: chord.notes };
   const inScale = isChordInScale(chord.notes, scaleNotes);
 
@@ -18,8 +23,8 @@ export default function VoicingCard({ chord, inversion, instrument, tuning, scal
     : <ChordDiagram shape={voicing} name="" source={source}
                     width={layout === 'row' ? 132 : 104} height={layout === 'row' ? 116 : 100} />;
 
-  const handleClick = (e) => { flashPulse(e.currentTarget); onChordClick && onChordClick(chordObj, voicing); };
-  const handlePin = (e) => { e.stopPropagation(); onPin && onPin(chordObj); };
+  const handleClick = (e) => { flashPulse(e.currentTarget); playChord(chordObj, voicing); };
+  const handlePin = (e) => { e.stopPropagation(); togglePin(chordObj); };
 
   if (layout === 'row') {
     return <VoicingRow fullName={fullName} label={label} source={source} bassNote={bassNote}

@@ -5,6 +5,7 @@
 
 import { chordNotes, voicingsForChord } from '../../theory/index.js';
 import { flashPulse } from '../../ui/pulse.js';
+import { useStore, useTuning } from '../../store/index.js';
 import ChordDiagram from '../diagrams/ChordDiagram.jsx';
 import PianoChordDiagram from '../diagrams/PianoChordDiagram.jsx';
 import Icon from '../../app/Icon.jsx';
@@ -43,27 +44,35 @@ function PinnedCard({ c, instrument, tuning, onChordClick, onUnpin }) {
   );
 }
 
-function PinnedStrip({ pinned, instrument, tuning, onChordClick, onUnpin }) {
+function PinnedStrip() {
+  const pinned = useStore(s => s.pinned);
+  const instrument = useStore(s => s.instrument);
+  const tuning = useTuning();
+  const playChord = useStore(s => s.playChord);
+  const togglePin = useStore(s => s.togglePin);
   return (
     <div className="pinned-strip">
       {pinned.length === 0 && <div className="pinned-strip-empty">Закрепи аккорды из поиска или из диатоники — появятся здесь</div>}
-      {pinned.map((c, i) => <PinnedCard key={i} c={c} instrument={instrument} tuning={tuning} onChordClick={onChordClick} onUnpin={onUnpin} />)}
+      {pinned.map((c, i) => <PinnedCard key={i} c={c} instrument={instrument} tuning={tuning} onChordClick={playChord} onUnpin={togglePin} />)}
     </div>
   );
 }
 
-export default function PinnedBar({ pinned, collapsed, onToggleCollapsed, instrument, tuning, onChordClick, onUnpin }) {
+export default function PinnedBar() {
+  const count = useStore(s => s.pinned.length);
+  const collapsed = useStore(s => s.pinnedCollapsed);
+  const toggleCollapsed = useStore(s => s.togglePinnedCollapsed);
   return (
     <div className="pinned-bar">
       <button
         className="pinned-toggle"
-        onClick={onToggleCollapsed}
+        onClick={toggleCollapsed}
         title={collapsed ? 'Показать закреплённые' : 'Скрыть закреплённые'}>
         <Icon name={collapsed ? 'chevron-up' : 'chevron-down'} />
         <span>Закреплённые аккорды</span>
-        <span className="pinned-count">{pinned.length}</span>
+        <span className="pinned-count">{count}</span>
       </button>
-      {!collapsed && <PinnedStrip pinned={pinned} instrument={instrument} tuning={tuning} onChordClick={onChordClick} onUnpin={onUnpin} />}
+      {!collapsed && <PinnedStrip />}
     </div>
   );
 }

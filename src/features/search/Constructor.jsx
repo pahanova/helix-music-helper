@@ -3,6 +3,7 @@
 // block with the formula pills and a vertical list of inversion voicings.
 
 import { CHORD_TYPES, NOTES_SHARP, isChordInScale, voicingsForChord } from '../../theory/index.js';
+import { useStore, useTuning, useScaleNotes, useKeyName } from '../../store/index.js';
 import VoicingCard from './VoicingCard.jsx';
 
 export const EMPTY_SPEC = {
@@ -22,7 +23,7 @@ export const EMPTY_SPEC = {
   omit5: false,
 };
 
-export default function Constructor({ spec, setSpec, update, setEnum, built, instrument, tuning, scaleNotes, keyName, onPin, pinnedNames, onChordClick }) {
+export default function Constructor({ spec, setSpec, update, setEnum, built }) {
   const fifthForced = spec.quality === 'dim' || spec.quality === 'aug';
   const susOn = !!spec.sus;
   const isPower = spec.quality === '5';
@@ -38,10 +39,7 @@ export default function Constructor({ spec, setSpec, update, setEnum, built, ins
       <FifthGroup spec={spec} update={update} setEnum={setEnum} fifthForced={fifthForced} />
       <OmitGroup spec={spec} update={update}
                  susOn={susOn} isPower={isPower} fifthForced={fifthForced} thirdOmitted={thirdOmitted} />
-      <ConstructorResult built={built}
-                         instrument={instrument} tuning={tuning}
-                         scaleNotes={scaleNotes} keyName={keyName}
-                         onPin={onPin} pinnedNames={pinnedNames} onChordClick={onChordClick} />
+      <ConstructorResult built={built} />
     </div>
   );
 }
@@ -205,7 +203,11 @@ function OmitGroup({ spec, update, susOn, isPower, fifthForced, thirdOmitted }) 
 
 /* ─── Result block ──────────────────────────────────────────── */
 
-function ConstructorResult({ built, instrument, tuning, scaleNotes, keyName, onPin, pinnedNames, onChordClick }) {
+function ConstructorResult({ built }) {
+  const instrument = useStore(s => s.instrument);
+  const tuning = useTuning();
+  const scaleNotes = useScaleNotes();
+  const keyName = useKeyName();
   if (!built) {
     return (
       <div className="muted" style={{
@@ -227,9 +229,7 @@ function ConstructorResult({ built, instrument, tuning, scaleNotes, keyName, onP
       {inversions.length === 0 ? (
         <div className="dim" style={{fontSize: 11, marginTop: 8, textAlign: 'center'}}>не нашлось играбельной аппликатуры для этого инструмента</div>
       ) : (
-        <InversionList baseChord={baseChord} inversions={inversions}
-                       instrument={instrument} tuning={tuning}
-                       pinnedNames={pinnedNames} onPin={onPin} onChordClick={onChordClick} />
+        <InversionList baseChord={baseChord} inversions={inversions} />
       )}
     </div>
   );
@@ -250,17 +250,9 @@ function FormulaRow({ built, inScale, keyName }) {
   );
 }
 
-function InversionList({ baseChord, inversions, instrument, tuning, pinnedNames, onPin, onChordClick }) {
+function InversionList({ baseChord, inversions }) {
   const cards = inversions.map((inv, idx) => (
-    <VoicingCard key={idx}
-                 chord={baseChord}
-                 inversion={inv}
-                 instrument={instrument}
-                 tuning={tuning}
-                 pinnedNames={pinnedNames}
-                 onPin={onPin}
-                 onChordClick={onChordClick}
-                 layout="row" />
+    <VoicingCard key={idx} chord={baseChord} inversion={inv} layout="row" />
   ));
   return <div className="col" style={{gap: 8}}>{cards}</div>;
 }

@@ -4,6 +4,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { MODES, NOTES_SHARP, keyLabel } from '../theory/index.js';
+import { useStore } from '../store/index.js';
 import Icon from './Icon.jsx';
 
 function ModeChip({ label, isOn, onPick }) {
@@ -35,7 +36,10 @@ function KeyDropdown({ rootNote, mode, onChange, onPickRoot }) {
   );
 }
 
-export default function KeyPicker({ rootNote, mode, onChange }) {
+export default function KeyPicker() {
+  const rootNote = useStore(s => s.rootNote);
+  const mode = useStore(s => s.mode);
+  const onChange = useStore(s => s.selectKey);
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   useEffect(() => {

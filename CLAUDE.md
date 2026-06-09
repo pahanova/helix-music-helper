@@ -33,11 +33,11 @@ npm run build      # прод-сборка в dist/
 
 ## Архитектура и стиль кода
 
-- **Стек:** Vite + React 18 + ES modules, plain JS/JSX (без TypeScript). Переход на TS или другие крупные изменения тулинга — согласовывай с пользователем заранее.
+- **Стек:** Vite + React 18 + zustand + ES modules, plain JS/JSX (без TypeScript). Переход на TS или другие крупные изменения тулинга — согласовывай с пользователем заранее.
 - **Модули по владению функционалом:** каждая фича владеет своими компонентами И своим CSS (`src/features/<имя>/`). Чистая логика (теория, аудио) отделена от React. Не размазывай стили чужой фичи по своим файлам.
 - **Компоненты — не более 4 уровней отступа** внутри функции: глубокий JSX выноси в подкомпоненты, map-колбэки — в отдельные компоненты, вложенные условия — в ранние return.
 - **Музыкальная логика** — в `src/theory/` (именованные экспорты через `src/theory/index.js`). Если меняешь сигнатуру — обнови всех потребителей.
-- **Состояние** — в `App` (`src/app/App.jsx`) через `useState`. Глобального стора нет.
+- **Состояние** — zustand-store в `src/store/index.js`: примитивы + экшены; производные значения (строй, гамма, диатоника, подсветка) не хранятся, а отдаются мемоизированными хуками там же (`useTuning`, `useScaleNotes`, …). Компоненты подписываются на отдельные поля селекторами — не тяни состояние store через props. В `App` остаётся только tweaks (`useTweaks`, протокол edit-mode); локальное состояние фич (табы поиска, spec конструктора) — в самих фичах.
 - **Tweaks-панель** (`src/tweaks/`) общается с хостом по протоколу `__edit_mode_*` через `postMessage`; вне Claude Design она просто инертна.
 - Эталонные скриншоты прототипа до переписывания — `docs/screenshots-baseline/`, скриншоты приёмки — `docs/screenshots-rewrite/`, спецификация миграции — `docs/REWRITE-SPEC.md`. Старый no-build код доступен на ветке `master` до слияния.
 
@@ -53,9 +53,10 @@ src/
     piano-layout.js, voicings.js — гаммы, аккорды, identifyChord, генератор войсингов
     chord-shapes-data.js      — курированная гитарная БД из chords-db (~300 форм), сгенерированный артефакт
   audio/index.js              — soundfont-player + MusyngKite, MIDI-хелперы, playNote/playChord
+  store/index.js              — zustand-store: состояние приложения, экшены, производные хуки
   ui/pulse.js                 — flashPulse (анимация .is-played)
-  app/                        — App (состояние+композиция), TopBar, KeyPicker, LeftPanel,
-                                CenterColumn, CircleSection, RightPanel, AppTweaks, Section, Icon, useNarrow
+  app/                        — App (композиция+tweaks), TopBar, KeyPicker, LeftPanel,
+                                CenterColumn, CircleSection, RightPanel, AppTweaks, Section, Icon
   features/
     instrument/               — Fretboard / Piano / Instrument shell + instrument.css
     circle/                   — CircleOfFifths (SVG-круг) + circle.css
@@ -73,7 +74,7 @@ scripts/build-chord-shapes.js — пересборка chord-shapes-data.js из
 - **MIDI:** `tuningOpenMidis(tuning, instrument)` назначает абсолютный MIDI каждой открытой струне (anchor: гитара E2 = 40, бас B0 = 23; следующая струна — минимальный pitch выше предыдущей с нужным pitch class). Для пианино — `noteToMidi(name, octave)` (C4 = 60).
 - **Точки входа:**
   - `Instrument` shell пробрасывает `playMidi` в Fretboard/Piano; cell/key click вызывает `playNote(instrument, midi)`.
-  - `handleChordClick(chord, voicing?)` в `src/app/App.jsx` — все клики по карточкам идут сюда. Когда воизинг известен (карточка инверсии в поиске, закреплённый, мини-карточка диатоники) — играем именно его MIDI через `voicingToMidis`. Иначе — root-инверсия из `voicingsForChord`. Крайний фолбэк (нет играбельной формы вообще) — синтез из `CHORD_TYPES[type]` в дефолтной октаве.
+  - `playChord(chord, voicing?)` — экшен store (`src/store/index.js`), все клики по карточкам идут сюда. Когда воизинг известен (карточка инверсии в поиске, закреплённый, мини-карточка диатоники) — играем именно его MIDI через `voicingToMidis`. Иначе — root-инверсия из `voicingsForChord`. Крайний фолбэк (нет играбельной формы вообще) — синтез из `CHORD_TYPES[type]` в дефолтной октаве.
 - **Pulse-анимация:** `flashPulse(el)` из `src/ui/pulse.js` добавляет класс `.is-played`, кейфреймы в `src/styles.css`. Используется на всех кликах (карточки, ноты грифа, клавиши пианино, строки диатоники).
 - **Топбар:** чип `аккорд / арпеджио` (`chordPlayMode`), кнопка mute (`audioMuted`). Mute не отключает clicks — только воспроизведение.
 

@@ -11,7 +11,7 @@ import PositionPlaceholder from './PositionPlaceholder.jsx';
 import SearchIcon from './SearchIcon.jsx';
 import './search.css';
 
-export default function ChordSearch({ instrument, tuning, scaleNotes, keyName, onPin, pinnedNames, onChordClick }) {
+export default function ChordSearch() {
   const [tab, setTab] = useState('notes'); // 'notes' | 'position'
   const [spec, setSpec] = useState(EMPTY_SPEC);
   const [nameOpen, setNameOpen] = useState(false);
@@ -29,19 +29,10 @@ export default function ChordSearch({ instrument, tuning, scaleNotes, keyName, o
       <SearchTabs tab={tab} onSwitch={switchTab}
                   nameOpen={nameOpen} onToggleName={() => setNameOpen(o => !o)} />
 
-      {nameOpen && (
-        <NameSearch q={nameQ} setQ={setNameQ}
-                    instrument={instrument} tuning={tuning}
-                    scaleNotes={scaleNotes} keyName={keyName}
-                    onPin={onPin} pinnedNames={pinnedNames} onChordClick={onChordClick} />
-      )}
+      {nameOpen && <NameSearch q={nameQ} setQ={setNameQ} />}
 
       {!nameOpen && tab === 'notes' && (
-        <Constructor spec={spec} setSpec={setSpec} update={update} setEnum={setEnum}
-                     built={built}
-                     instrument={instrument} tuning={tuning}
-                     scaleNotes={scaleNotes} keyName={keyName}
-                     onPin={onPin} pinnedNames={pinnedNames} onChordClick={onChordClick} />
+        <Constructor spec={spec} setSpec={setSpec} update={update} setEnum={setEnum} built={built} />
       )}
 
       {!nameOpen && tab === 'position' && <PositionPlaceholder />}

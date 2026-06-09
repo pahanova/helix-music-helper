@@ -1,11 +1,12 @@
 // src/app/CircleSection.jsx — collapsible card with the circle of fifths and the
 // «Аккорды тональности» mini-cards. Lives in app/ (not features/circle): it
-// composes the circle feature with the diagrams feature and app-level state
+// composes the circle feature with the diagrams feature and store state
 // (collapse, current instrument/tuning, chord clicks → audio). Collapsing the
 // card hides the key chords too — prototype behavior, keep as is.
 
-import { MODES, keyLabel, chordNotes, voicingsForChord } from '../theory/index.js';
+import { MODES, chordNotes, voicingsForChord } from '../theory/index.js';
 import { flashPulse } from '../ui/pulse.js';
+import { useStore, useTuning, useDiatonicChords, useKeyName } from '../store/index.js';
 import CircleOfFifths from '../features/circle/CircleOfFifths.jsx';
 import ChordDiagram from '../features/diagrams/ChordDiagram.jsx';
 import PianoChordDiagram from '../features/diagrams/PianoChordDiagram.jsx';
@@ -24,12 +25,15 @@ function MiniNotesFallback({ c }) {
   );
 }
 
-function DiatonicMiniCard({ c, i, instrument, tuning, onChordClick }) {
+function DiatonicMiniCard({ c, i }) {
+  const instrument = useStore(s => s.instrument);
+  const tuning = useTuning();
+  const playChord = useStore(s => s.playChord);
   const inversions = voicingsForChord({ root: c.root, type: c.quality }, instrument, tuning);
   const root = inversions[0];
   return (
     <div className="chord-card" style={{width: 92}}
-         onClick={(e) => { flashPulse(e.currentTarget); onChordClick({root: c.root, type: c.quality, name: c.name}, root && root.voicing); }}>
+         onClick={(e) => { flashPulse(e.currentTarget); playChord({root: c.root, type: c.quality, name: c.name}, root && root.voicing); }}>
       <div className="chord-name" style={{fontSize: 13}}>
         <span>{c.name}</span>
       </div>
@@ -53,51 +57,53 @@ function PentatonicNote() {
   );
 }
 
-function KeyChords({ hasDiatonic, diatonicChords, instrument, tuning, onChordClick }) {
+function KeyChords() {
+  const diatonicChords = useDiatonicChords();
   return (
     <div>
       <div className="sec-h" style={{margin: '0 0 8px 0'}}>Аккорды тональности</div>
-      {!hasDiatonic && <PentatonicNote />}
+      {diatonicChords.length === 0 && <PentatonicNote />}
       <div className="row-wrap">
-        {diatonicChords.map((c, i) => <DiatonicMiniCard key={i} c={c} i={i} instrument={instrument} tuning={tuning} onChordClick={onChordClick} />)}
+        {diatonicChords.map((c, i) => <DiatonicMiniCard key={i} c={c} i={i} />)}
       </div>
     </div>
   );
 }
 
-function CircleBody({ narrow, rootNote, mode, onSelectKey, hasDiatonic, diatonicChords, instrument, tuning, onChordClick }) {
+function CircleBody() {
+  const narrow = useStore(s => s.narrow);
+  const rootNote = useStore(s => s.rootNote);
+  const mode = useStore(s => s.mode);
+  const selectKey = useStore(s => s.selectKey);
   return (
     <div style={{display: 'grid', gridTemplateColumns: narrow ? '1fr' : '320px 1fr', gap: 20, paddingTop: 12, alignItems: 'start'}}>
       <CircleOfFifths
         rootNote={rootNote}
         mode={mode}
-        onSelectKey={onSelectKey}
+        onSelectKey={selectKey}
         showSecondaryDominants={true}
         size={300}
       />
       <div className="col" style={{gap: 12}}>
-        <KeyChords hasDiatonic={hasDiatonic} diatonicChords={diatonicChords} instrument={instrument} tuning={tuning} onChordClick={onChordClick} />
+        <KeyChords />
       </div>
     </div>
   );
 }
 
-export default function CircleSection({
-  collapsed, onToggle, narrow, rootNote, mode, onSelectKey,
-  hasDiatonic, diatonicChords, instrument, tuning, onChordClick,
-}) {
+export default function CircleSection() {
+  const collapsed = useStore(s => s.circleCollapsed);
+  const toggle = useStore(s => s.toggleCircleCollapsed);
+  const mode = useStore(s => s.mode);
+  const keyName = useKeyName();
   return (
     <div className="card">
-      <button className="collapse-btn" onClick={onToggle}>
+      <button className="collapse-btn" onClick={toggle}>
         <Icon name={collapsed ? 'chevron-right' : 'chevron-down'} />
         <span>Квинтово-квартовый круг</span>
-        <span className="dim" style={{marginLeft: 'auto', textTransform: 'none', letterSpacing: 0, fontWeight: 400}}>{keyLabel(rootNote, mode)} · {MODES[mode].label}</span>
+        <span className="dim" style={{marginLeft: 'auto', textTransform: 'none', letterSpacing: 0, fontWeight: 400}}>{keyName} · {MODES[mode].label}</span>
       </button>
-      {!collapsed && (
-        <CircleBody narrow={narrow} rootNote={rootNote} mode={mode} onSelectKey={onSelectKey}
-                    hasDiatonic={hasDiatonic} diatonicChords={diatonicChords}
-                    instrument={instrument} tuning={tuning} onChordClick={onChordClick} />
-      )}
+      {!collapsed && <CircleBody />}
     </div>
   );
 }

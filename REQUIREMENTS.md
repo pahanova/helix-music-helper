@@ -129,14 +129,14 @@
 
 ## Тех-стек
 
-Vite + React 18 + ES modules, plain JS/JSX. Зависимости из npm (react, react-dom, soundfont-player).
+Vite + React 18 + ES modules, plain JS/JSX. Зависимости из npm (react, react-dom, zustand, soundfont-player).
 
 ```bash
 npm install
 npm run dev    # http://localhost:5173/
 ```
 
-Код разбит на модули по владению функционалом (`src/theory`, `src/audio`, `src/features/*`, `src/app`, `src/tweaks`); React-компоненты держатся в пределах 4 уровней отступа. Файлы — см. `CLAUDE.md`.
+Код разбит на модули по владению функционалом (`src/theory`, `src/audio`, `src/store`, `src/features/*`, `src/app`, `src/tweaks`); React-компоненты держатся в пределах 4 уровней отступа. Состояние приложения — zustand-store (`src/store`), компоненты подписываются селекторами без prop drilling. Файлы — см. `CLAUDE.md`.
 
 ## История изменений
 
@@ -146,3 +146,4 @@ npm run dev    # http://localhost:5173/
 - **Modes + pentatonic + in-key badge** — `MT.MODES` стал единой таблицей с полями `qualities` и `romans`; диатоника и втор. доминанты считаются автоматически для любого 7-нотного лада (dorian/phrygian/lydian/mixolydian/locrian + harmonic/melodic minor). Пентатоника `qualities=null`, поэтому диатонические секции просто скрываются. В поиске у каждой карточки появилась индикация «в тональности», когда все ноты аккорда входят в текущую гамму — `MT.isChordInScale`.
 - **Звук** — `audio.js` обёртка над `soundfont-player` (CDN `unpkg`) + сэмплы MusyngKite (`gleitz/midi-js-soundfonts`, MIT/CC). Клик по ноте играет single MIDI; клик по аккорд-карточке играет MIDI-список из её войсинга; для дефолтных триад без курированной формы — генерируемая инверсия. В топбаре чип «аккорд / арпеджио» и кнопка mute. Все клики получили pulse-анимацию.
 - **React rewrite** — переход с no-build прототипа (React UMD + Babel Standalone) на Vite + ES modules без изменения функционала и дизайна. Монолиты разрезаны по владению: `music-theory.js` → `src/theory/*`, `app.jsx` → `src/app/*` + `src/features/pinned`, CSS разнесён по фичам. Компоненты декомпозированы до ≤4 уровней отступа. Приёмка: 21 сценарий сверен с эталонными скриншотами прототипа (`docs/screenshots-baseline/` vs `docs/screenshots-rewrite/`), расхождений нет; спецификация миграции — `docs/REWRITE-SPEC.md`.
+- **Zustand store** — состояние приложения вынесено из `App` в `src/store/index.js` (zustand): декомпозиция до ≤4 отступов породила длинные цепочки транзитных props (до 5 уровней в поиске), store с подписками-селекторами их убрал. Производные значения (строй, гамма, диатоника, подсветка) — мемоизированные хуки рядом со store; `handleChordClick` стал экшеном `playChord`; в `App` остался только tweaks-стейт. Поведение и дизайн не менялись (браузерная приёмка по всем интеракциям, консоль чистая).
