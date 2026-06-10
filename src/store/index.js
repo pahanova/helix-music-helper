@@ -8,7 +8,7 @@ import { create } from 'zustand';
 import * as HelixAudio from '../audio/index.js';
 import {
   CHORD_TYPES, TUNINGS, keyLabel,
-  chordNotes, voicingsForChord,
+  chordNotes, voicingsForChord, noteIndex, noteName,
   scaleNotes as scaleNotesFor,
   diatonicChords as diatonicChordsFor,
   secondaryDominants as secondaryDominantsFor,
@@ -158,20 +158,24 @@ export function useHighlightedNotes() {
   const scaleNotes = useScaleNotes();
   const activeChord = useStore(s => s.activeChord);
   return useMemo(() => {
+    // Keys are sharp chromatic names (what Fretboard/Piano cells produce);
+    // degrees are matched by pitch class so key-context spellings (Bb) still hit.
     const hl = {};
+    const degreeByPc = new Map(scaleNotes.map((n, i) => [noteIndex(n), i + 1]));
     if (activeChord) {
       const cNotes = activeChord.notes || chordNotes(activeChord.root, activeChord.type);
       cNotes.forEach((n, i) => {
-        const degInScale = scaleNotes.indexOf(n) + 1;
-        hl[n] = {
-          degree: degInScale > 0 ? degInScale : 'x',
-          label: i === 0 ? 'R' : (degInScale > 0 ? String(degInScale) : n),
+        const pc = noteIndex(n);
+        const deg = degreeByPc.get(pc);
+        hl[noteName(pc)] = {
+          degree: deg || 'x',
+          label: i === 0 ? 'R' : (deg ? String(deg) : n),
           role: i === 0 ? 'is-root' : '',
         };
       });
     } else {
       scaleNotes.forEach((n, i) => {
-        hl[n] = { degree: i + 1, label: String(i + 1) };
+        hl[noteName(noteIndex(n))] = { degree: i + 1, label: String(i + 1) };
       });
     }
     return hl;

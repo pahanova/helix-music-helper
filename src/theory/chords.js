@@ -36,11 +36,13 @@ export function qualitySuffix(q) {
   }
 }
 
-// Returns the notes of a chord
+// Returns the notes of a chord. The root keeps its given spelling and the rest
+// follow its accidental family, so a Bb chord reads Bb–D–F, not A#–D–F.
 export function chordNotes(rootNote, type) {
   const root = noteIndex(rootNote);
   const intervals = CHORD_TYPES[type] || CHORD_TYPES['maj'];
-  return intervals.map(iv => noteName(root + iv));
+  const useFlats = rootNote.length > 1 && rootNote[1] === 'b';
+  return intervals.map(iv => iv === 0 ? rootNote : noteName(root + iv, useFlats));
 }
 
 // Build a chord from a constructor spec.

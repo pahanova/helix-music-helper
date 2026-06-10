@@ -1,7 +1,7 @@
 // src/theory/scales.js
 // Scale interval patterns, mode metadata, diatonic chords and secondary dominants.
 
-import { noteIndex, noteName } from './notes.js';
+import { noteIndex, noteName, NOTE_LETTERS, spellPitch } from './notes.js';
 import { qualitySuffix } from './chords.js';
 
 // Scale interval patterns (semitones from root)
@@ -41,10 +41,57 @@ export function keyLabel(rootNote, mode) {
   return rootNote + (MODES[mode] ? MODES[mode].short : '');
 }
 
-// Returns array of 7 note names for a key
-export function scaleNotes(rootNote, scaleName = 'major', useFlats = false) {
+/* ─── Enharmonic spelling ───────────────────────────────────── */
+// A scale is spelled letter-wise: 7-note scales use each letter exactly once
+// (D minor = D E F G A Bb C, never A#); pentatonics map each interval to its
+// diatonic letter step. When the picked root produces a bad spelling (doubles,
+// or E#/B#/Cb/Fb pile-up), the enharmonic root is tried (D# major → Eb major).
+
+// Diatonic letter step for pentatonic intervals (no tritone there, so unambiguous).
+const PENTA_LETTER_STEP = { 0: 0, 2: 1, 3: 2, 4: 2, 5: 3, 7: 4, 9: 5, 10: 6 };
+
+const ENHARMONIC_ROOT = {
+  'C#': 'Db', 'Db': 'C#', 'D#': 'Eb', 'Eb': 'D#', 'F#': 'Gb',
+  'Gb': 'F#', 'G#': 'Ab', 'Ab': 'G#', 'A#': 'Bb', 'Bb': 'A#',
+};
+
+function spellFromRoot(rootNote, intervals) {
+  const li = NOTE_LETTERS.indexOf(rootNote[0]);
+  const rootPc = noteIndex(rootNote);
+  if (li < 0 || rootPc < 0) return null;
+  const steps = intervals.length === 7
+    ? intervals.map((_, i) => i)
+    : intervals.map(iv => PENTA_LETTER_STEP[iv]);
+  if (steps.some(s => s == null)) return null;
+  return intervals.map((iv, i) => spellPitch((rootPc + iv) % 12, NOTE_LETTERS[(li + steps[i]) % 7]));
+}
+
+// Lower is better: double accidentals are unacceptable, white-key accidentals
+// (E#, B#, Cb, Fb) are merely awkward. Ties keep the user's root spelling.
+function spellingScore(spelled) {
+  let score = 0;
+  for (const s of spelled) {
+    if (Math.abs(s.acc) >= 2) score += 10;
+    else if (s.acc === 1 && (s.name[0] === 'E' || s.name[0] === 'B')) score += 1;
+    else if (s.acc === -1 && (s.name[0] === 'C' || s.name[0] === 'F')) score += 1;
+  }
+  return score;
+}
+
+// Returns scale note names for a key, spelled for the key context.
+export function scaleNotes(rootNote, scaleName = 'major') {
+  const intervals = SCALES[scaleName];
+  if (!intervals) return [];
+  const main = spellFromRoot(rootNote, intervals);
+  const altRoot = ENHARMONIC_ROOT[rootNote];
+  const alt = altRoot ? spellFromRoot(altRoot, intervals) : null;
+  let best = main;
+  if (main && alt && spellingScore(alt) < spellingScore(main)) best = alt;
+  if (!best) best = alt;
+  if (best && spellingScore(best) < 10) return best.map(s => s.name);
+  // Defensive fallback (unreachable for the app's root set): chromatic sharps.
   const root = noteIndex(rootNote);
-  return SCALES[scaleName].map(iv => noteName(root + iv, useFlats));
+  return intervals.map(iv => noteName(root + iv));
 }
 
 // Returns array of diatonic chord objects: { root, quality, roman, degree, name }.
@@ -73,7 +120,7 @@ export function secondaryDominants(rootNote, mode = 'major') {
     const q = info.qualities[deg];
     if (q === 'dim' || q === 'aug') continue;
     const targetNote = notes[deg];
-    const dominantRoot = noteName(noteIndex(targetNote) + 7);
+    const dominantRoot = fifthAbove(targetNote);
     out.push({
       root: dominantRoot,
       quality: '7',
@@ -83,6 +130,15 @@ export function secondaryDominants(rootNote, mode = 'major') {
     });
   }
   return out;
+}
+
+// Perfect fifth above a note, spelled letter-wise (V/Eb is Bb7, not A#7).
+function fifthAbove(note) {
+  const li = NOTE_LETTERS.indexOf(note[0]);
+  const pc = noteIndex(note);
+  if (li < 0 || pc < 0) return noteName(pc + 7);
+  const s = spellPitch((pc + 7) % 12, NOTE_LETTERS[(li + 4) % 7]);
+  return Math.abs(s.acc) >= 2 ? noteName(pc + 7) : s.name;
 }
 
 // True when every chord note belongs to the scale (compared by pitch class).

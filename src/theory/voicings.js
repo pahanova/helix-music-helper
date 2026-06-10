@@ -2,7 +2,7 @@
 // Inversion-aware voicing generation: fretboard enumerator, piano voicer,
 // and the top-level voicingsForChord orchestrator (curated DB + generator).
 
-import { fretNote, noteIndex } from './notes.js';
+import { noteIndex, noteName } from './notes.js';
 import { chordNotes, chordInversions } from './chords.js';
 import CHORD_SHAPES_DB from './chord-shapes-data.js';
 
@@ -25,13 +25,17 @@ export function generateFretboardVoicings(chordNotes, tuning, opts = {}) {
     maxResults = 3,
   } = opts;
 
-  // For each string: list of options (muted, or a fret playing one of the chord tones).
+  // For each string: list of options (muted, or a fret playing one of the chord
+  // tones). Matched by pitch class so enharmonic spellings (Bb vs A#) don't matter;
+  // the option carries the chord's own spelling of the tone.
+  const tonePcs = chordNotes.map(n => noteIndex(n));
+  const bassPc = noteIndex(bassNote);
   const stringOptions = tuning.map(open => {
     const opts = [{ fret: -1, note: null, toneIdx: null }]; // muted
+    const openPc = noteIndex(open);
     for (let f = 0; f <= maxFret; f++) {
-      const note = fretNote(open, f);
-      const idx = chordNotes.indexOf(note);
-      if (idx >= 0) opts.push({ fret: f, note, toneIdx: idx });
+      const idx = tonePcs.indexOf((openPc + f) % 12);
+      if (idx >= 0) opts.push({ fret: f, note: chordNotes[idx], toneIdx: idx });
     }
     return opts;
   });
@@ -46,7 +50,7 @@ export function generateFretboardVoicings(chordNotes, tuning, opts = {}) {
       if (tones.size < chordNotes.length) return;
 
       const lowest = sounding[0]; // strings ordered low→high
-      if (lowest.note !== bassNote) return;
+      if (noteIndex(lowest.note) !== bassPc) return;
 
       const fretted = sounding.filter(p => p.fret > 0);
       let span = 0;
@@ -118,6 +122,17 @@ export function generateFretboardVoicings(chordNotes, tuning, opts = {}) {
   });
 }
 
+// Normalize a chord name's root and slash bass to sharp chromatic spelling —
+// chord-shapes-data keys are sharp-spelled ("A#m7"), so "Bbm7/Db" → "A#m7/C#".
+function sharpChordName(name) {
+  const m = /^([A-G](?:#{1,2}|b{1,2})?)([^/]*)(?:\/(.+))?$/.exec(name);
+  if (!m) return name;
+  const rootPc = noteIndex(m[1]);
+  if (rootPc < 0) return name;
+  const bassPc = m[3] != null ? noteIndex(m[3]) : -1;
+  return noteName(rootPc) + (m[2] || '') + (bassPc >= 0 ? '/' + noteName(bassPc) : '');
+}
+
 // Piano voicing for an inversion: bass note + close-position upper voices.
 // Returns { kind:'piano', notes: [{ name, octave, isBass }], range: { startOctave, octaves } }
 export function generatePianoVoicing(chordNotes, bassNote, opts = {}) {
@@ -184,7 +199,8 @@ export function voicingsForChord(chord, instrument, tuning) {
         && tuning.length === 6
         && tuning.join('') === 'EADGBE';
       if (isStandardGuitar) {
-        const curated = CHORD_SHAPES_DB[fullName] || (inv.degree === 0 && CHORD_SHAPES_DB[baseName]);
+        const curated = CHORD_SHAPES_DB[fullName] || CHORD_SHAPES_DB[sharpChordName(fullName)]
+          || (inv.degree === 0 && (CHORD_SHAPES_DB[baseName] || CHORD_SHAPES_DB[sharpChordName(baseName)]));
         if (curated) {
           voicing = { kind: 'fretboard', tuning, allowBarre: true, ...curated };
           source = 'curated';
