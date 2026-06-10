@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_base.css">
+<style>
+  .stage { display: flex; align-items: center; gap: 26px; }
+  .col { display: flex; flex-direction: column; gap: 16px; align-items: center; }
+
+  .prompt-card { width: 330px; overflow: hidden; transform: rotate(-1.2deg); }
+  .prompt-card img { display: block; width: 100%; }
+
+  .session-window { width: 1080px; }
+  .session-window img { display: block; width: 100%; }
+
+  .link { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .link .label { font-size: 19px; font-weight: 700; color: var(--accent-2);
+    background: var(--accent-soft); padding: 8px 18px; border-radius: 999px; white-space: nowrap; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="col">
+      <span class="badge">промпт</span>
+      <div class="card prompt-card">
+        <img src="design-first-prompt.png" alt="Первый промпт: описание будущего приложения словами">
+      </div>
+    </div>
+
+    <div class="link">
+      <svg width="110" height="48" viewBox="0 0 110 48">
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#0d9488"/><stop offset="1" stop-color="#0e7490"/>
+        </linearGradient></defs>
+        <path d="M4 24 H86" stroke="url(#g)" stroke-width="7" stroke-linecap="round"/>
+        <path d="M78 8 L104 24 L78 40 Z" fill="#0e7490"/>
+      </svg>
+    </div>
+
+    <div class="col">
+      <span class="badge">прототип</span>
+      <div class="card window session-window">
+        <div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="title">claude.ai · music helper — Design</span></div>
+        <img src="design-session-full.png" alt="Сессия Claude Design: диалог слева, превью приложения справа">
+      </div>
+    </div>
+  </div>
+</body>
+</html>

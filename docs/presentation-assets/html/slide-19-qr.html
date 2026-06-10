@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_base.css">
+<style>
+  .stage { display: flex; align-items: center; gap: 56px; }
+  .shot-card { width: 980px; overflow: hidden; }
+  .shot-card img { display: block; width: 100%; }
+
+  .qr-col { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  .qr-card { padding: 26px; }
+  .qr-card img { display: block; width: 380px; height: 380px; }
+  .url { font-family: "JetBrains Mono", Consolas, monospace; font-size: 21px; color: var(--muted); }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="card window shot-card">
+      <div class="titlebar"><span class="dots"><i></i><i></i><i></i></span></div>
+      <img src="app-dark.png" alt="Helix, тёмная тема">
+    </div>
+
+    <div class="qr-col">
+      <div class="card qr-card">
+        <img src="qr-repo.png" alt="QR: github.com/pahanova/helix-music-helper">
+      </div>
+      <div class="url">github.com/pahanova/<br>helix-music-helper</div>
+    </div>
+  </div>
+</body>
+</html>

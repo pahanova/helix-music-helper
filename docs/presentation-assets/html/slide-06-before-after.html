@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_base.css">
+<style>
+  .stage { display: flex; align-items: center; gap: 24px; }
+  .shot-card { width: 640px; overflow: hidden; }
+  .shot-card img { display: block; width: 100%; }
+
+  .link { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .bubble {
+    background: var(--accent-soft); color: #0b5f58;
+    border-radius: 16px 16px 4px 16px; padding: 12px 20px;
+    font-size: 21px; font-weight: 600; white-space: nowrap;
+    box-shadow: 0 6px 18px rgba(13, 90, 100, 0.14);
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="card window shot-card">
+      <div class="titlebar"><span class="dots"><i></i><i></i><i></i></span></div>
+      <img src="app-light.png" alt="Приложение, светлая тема">
+    </div>
+
+    <div class="link">
+      <div class="bubble">«сделай тёмную тему»</div>
+      <svg width="110" height="48" viewBox="0 0 110 48">
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#0d9488"/><stop offset="1" stop-color="#0e7490"/>
+        </linearGradient></defs>
+        <path d="M4 24 H86" stroke="url(#g)" stroke-width="7" stroke-linecap="round"/>
+        <path d="M78 8 L104 24 L78 40 Z" fill="#0e7490"/>
+      </svg>
+    </div>
+
+    <div class="card window shot-card">
+      <div class="titlebar"><span class="dots"><i></i><i></i><i></i></span></div>
+      <img src="app-dark.png" alt="Приложение, тёмная тема">
+    </div>
+  </div>
+</body>
+</html>

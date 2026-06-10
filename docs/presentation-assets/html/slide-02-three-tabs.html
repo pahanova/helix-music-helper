@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { position: relative; }
+  .tab { position: absolute; width: 780px; }
+  .tab .shot { display: block; width: 100%; }
+  .tab .titlebar .title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 600px; }
+
+  .tab.left   { left: 30px;  top: 95px;  transform: rotate(-2.4deg); z-index: 1; }
+  .tab.right  { right: 30px; top: 115px; transform: rotate(2.2deg);  z-index: 2; }
+  .tab.center { left: 50%;   top: 205px; transform: translateX(-50%) rotate(-0.6deg); z-index: 3; }
+
+  .tab .tag {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    bottom: -26px; white-space: nowrap; font-size: 21px;
+    box-shadow: 0 6px 18px rgba(13, 90, 100, 0.18);
+  }
+  .tab.left .tag  { left: 170px; }
+  .tab.right .tag { left: auto; right: 60px; transform: none; }
+  .header {
+    position: absolute; top: 44px; left: 0; right: 0;
+    text-align: center; z-index: 5;
+  }
+  .header h1 { font-size: 40px; font-weight: 800; letter-spacing: -0.01em; }
+  .header h1 .accent { color: var(--accent); }
+  .plus {
+    position: absolute; z-index: 4;
+    width: 64px; height: 64px; border-radius: 50%;
+    background: #fff; border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 34px; font-weight: 800; color: var(--accent-2);
+  }
+  .plus.p1 { left: 378px; top: 305px; }
+  .plus.p2 { right: 378px; top: 320px; }
+</style>
+</head>
+<body>
+  <div class="tab left card window">
+    <div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="title">yandex.ru/images — «квинто квартовый круг»</span></div>
+    <img class="shot" src="tab-yandex-circle.png" alt="Поиск картинок: квинто-квартовый круг">
+    <span class="tag badge">квинтовый круг</span>
+  </div>
+
+  <div class="tab right card window">
+    <div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="title">grunfy.com/scaler — гаммы на грифе</span></div>
+    <img class="shot" src="tab-grunfy.png" alt="Grunfy Scaler: D minor на грифе">
+    <span class="tag badge">тональность на грифе</span>
+  </div>
+
+  <div class="tab center card window">
+    <div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="title">oolimo.com/guitar-chords/find</span></div>
+    <img class="shot" src="tab-oolimo.png" alt="Oolimo: поиск аккорда Dm">
+    <span class="tag badge">поиск аккордов</span>
+  </div>
+
+  <div class="plus p1">+</div>
+  <div class="plus p2">+</div>
+</body>
+</html>
