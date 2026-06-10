@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_base.css">
+<style>
+  .stage { display: flex; flex-direction: column; align-items: center; gap: 34px; }
+  .key { font-size: 44px; font-weight: 800; letter-spacing: -0.01em; }
+  .key .mono { color: var(--accent-2); }
+
+  .row { display: flex; align-items: center; gap: 26px; }
+  .verdict { font-size: 46px; width: 64px; text-align: center; }
+
+  .scale { display: flex; gap: 14px; padding: 26px 30px; }
+  .scale .note {
+    font-family: "JetBrains Mono", Consolas, monospace;
+    font-size: 46px; font-weight: 700;
+    width: 92px; height: 92px; border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    background: #f3f8f9; border: 1px solid var(--border);
+  }
+  .row.bad .scale { border-color: #f3caca; }
+  .row.bad .note.dup { background: var(--bad-soft); border-color: #f0b3b3; color: var(--bad); }
+  .row.good .note.fix { background: var(--good-soft); border-color: #9ed8d0; color: var(--good); }
+
+  .why { font-size: 26px; color: var(--muted); width: 420px; line-height: 1.45; }
+  .why b { color: var(--text); }
+  .why.bad b { color: var(--bad); }
+  .why.good b { color: var(--good); }
+
+  .footer { font-size: 24px; color: var(--muted); margin-top: 6px; }
+  .footer .mono { color: var(--accent-2); font-weight: 700; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="key">Гамма <span class="mono">D&nbsp;minor</span> — какая шестая нота?</div>
+
+    <div class="row bad">
+      <div class="verdict">❌</div>
+      <div class="card scale">
+        <span class="note">D</span><span class="note">E</span><span class="note">F</span>
+        <span class="note">G</span><span class="note dup">A</span><span class="note dup">A♯</span><span class="note">C</span>
+      </div>
+      <div class="why bad">буква <b>A</b> встречается дважды,<br>а <b>B</b> пропала совсем</div>
+    </div>
+
+    <div class="row good">
+      <div class="verdict">✅</div>
+      <div class="card scale">
+        <span class="note">D</span><span class="note">E</span><span class="note">F</span>
+        <span class="note">G</span><span class="note">A</span><span class="note fix">B♭</span><span class="note">C</span>
+      </div>
+      <div class="why good"><b>7 нот = 7 разных букв</b> —<br>та же клавиша, правильное имя</div>
+    </div>
+
+    <div class="footer">Звучит одинаково. Но во второй записи музыкант не споткнётся.</div>
+  </div>
+</body>
+</html>

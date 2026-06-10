@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_base.css">
+<style>
+  .stage { display: flex; flex-direction: column; align-items: center; gap: 26px; }
+  .header { display: flex; align-items: center; gap: 18px; }
+  .header h2 { font-size: 34px; font-weight: 800; }
+  .pair { display: flex; gap: 36px; align-items: stretch; }
+  .window { width: 620px; }
+  .body {
+    padding: 24px 30px; background: #fcfeff;
+    font-family: "JetBrains Mono", Consolas, monospace;
+    font-size: 18.5px; line-height: 1.72; white-space: pre;
+  }
+  .dir { color: var(--accent-2); font-weight: 700; }
+  .com { color: #93a8b1; }
+  .hash { color: var(--accent); font-weight: 700; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="header">
+      <h2>Под капотом — нормальный проект</h2>
+      <span class="badge">строк руками: ~0</span>
+    </div>
+    <div class="pair">
+
+      <div class="card window">
+        <div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="title">src/ · Vite + React + zustand</span></div>
+        <div class="body"><span class="dir">src/</span>
+├ <span class="dir">theory/</span>     <span class="com">чистая теория, ноль React</span>
+│  ├ notes.js · scales.js · chords.js
+│  ├ voicings.js   <span class="com">генератор аппликатур</span>
+│  └ circle-of-fifths.js
+├ <span class="dir">audio/</span>      <span class="com">сэмплы, playNote/playChord</span>
+├ <span class="dir">store/</span>      <span class="com">zustand + производные хуки</span>
+├ <span class="dir">features/</span>   <span class="com">каждая фича владеет своим CSS</span>
+│  ├ instrument/ · circle/ · diagrams/
+│  └ search/ · pinned/
+└ <span class="dir">app/</span>        <span class="com">App, TopBar, панели</span>
+<span class="dir">scripts/</span>       <span class="com">check-spelling.js — тест теории</span></div>
+      </div>
+
+      <div class="card window">
+        <div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="title">git log --oneline</span></div>
+        <div class="body"><span class="hash">769dfcc</span> Spell scales and chords for the key context
+<span class="hash">047e838</span> Move app state to a zustand store
+<span class="hash">43821e0</span> Update docs and acceptance screenshots
+<span class="hash">4cb2c8b</span> Remove legacy no-build prototype files
+<span class="hash">455868c</span> Assemble app layer: App, TopBar, panels
+<span class="hash">ef08f96</span> Port feature modules: instrument, search…
+<span class="hash">a2967ea</span> Port theory, audio, chord shapes to ESM
+<span class="hash">26fcd58</span> Scaffold Vite + React app shell
+<span class="hash">0177214</span> Add note and chord playback via soundfont
+<span class="hash">1b45059</span> Add modes/pentatonic + in-key badge</div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

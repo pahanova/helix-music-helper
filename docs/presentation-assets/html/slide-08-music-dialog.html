@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_base.css">
+<style>
+  .window { width: 1060px; }
+  .chat { padding: 36px 44px; display: flex; flex-direction: column; gap: 22px; background: #fcfeff; }
+  .msg { max-width: 78%; padding: 18px 26px; border-radius: 20px; font-size: 25px; line-height: 1.55; }
+  .msg .mono { font-weight: 700; }
+  .me { align-self: flex-end; background: linear-gradient(135deg, #0d9488, #0e7490); color: #fff;
+        border-bottom-right-radius: 6px; }
+  .me .mono { color: #d7f5ef; }
+  .ai { align-self: flex-start; background: #f1f7f8; border: 1px solid var(--border);
+        border-bottom-left-radius: 6px; }
+  .ai .mono { color: var(--accent-2); }
+  .ai .name { font-size: 17px; font-weight: 700; color: var(--accent); margin-bottom: 8px;
+              text-transform: uppercase; letter-spacing: 0.06em; }
+</style>
+</head>
+<body>
+  <div class="card window">
+    <div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="title">диалог · без перевода на «язык ТЗ»</span></div>
+    <div class="chat">
+      <div class="msg me">Добавь вторичные доминанты к диатонике.
+        К уменьшённым ступеням их не строй — в мажоре это <span class="mono">vii°</span></div>
+      <div class="msg ai"><div class="name">Claude</div>
+        Готово: <span class="mono">V/ii … V/vi</span> считаются для любого 7-нотного лада,
+        dim- и aug-ступени пропускаются автоматически. В круге показал их пунктиром —
+        они вне тональности</div>
+      <div class="msg me">В дориане тогда проверь <span class="mono">♭III</span> и <span class="mono">♭VII</span> —
+        у модальных ступеней должны быть префиксы</div>
+      <div class="msg ai"><div class="name">Claude</div>
+        Проверил: D dorian → <span class="mono">i · ii · ♭III · IV · v · vi° · ♭VII</span>,
+        римские цифры берутся из таблицы лада, а не из мажора</div>
+    </div>
+  </div>
+</body>
+</html>

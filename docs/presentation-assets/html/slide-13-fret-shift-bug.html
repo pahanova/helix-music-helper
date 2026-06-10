@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_base.css">
+<style>
+  .stage { display: flex; flex-direction: column; align-items: center; gap: 30px; }
+  .title { font-size: 38px; font-weight: 800; letter-spacing: -0.01em; }
+  .title .mono { color: var(--accent-2); }
+  .pair { display: flex; gap: 60px; }
+  .panel { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 30px 44px 26px; }
+  .panel .verdict { font-size: 27px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+  .panel.bad .verdict { color: var(--bad); }
+  .panel.good .verdict { color: var(--good); }
+  .panel .sub { font-size: 21px; color: var(--muted); }
+  .panel.bad { border-color: #f0c4c4; background: linear-gradient(180deg, #fffafa, #fff); }
+  .panel.good { border-color: #b9e2dc; background: linear-gradient(180deg, #f8fdfc, #fff); }
+  svg text { font-family: "JetBrains Mono", Consolas, monospace; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="title">Карточка аккорда <span class="mono">A&nbsp;major</span> — найди ошибку</div>
+    <div class="pair">
+
+      <div class="card panel bad">
+        <div class="verdict">❌ что показывало приложение</div>
+        <svg width="300" height="340" viewBox="0 0 300 340">
+          <!-- open/mute: x 0 _ _ _ 0 -->
+          <text x="50" y="38" font-size="26" fill="#5b7480" text-anchor="middle">×</text>
+          <circle cx="90" cy="30" r="9" fill="none" stroke="#5b7480" stroke-width="2.5"/>
+          <circle cx="250" cy="30" r="9" fill="none" stroke="#5b7480" stroke-width="2.5"/>
+          <!-- nut -->
+          <rect x="47" y="52" width="206" height="10" rx="3" fill="#10222b"/>
+          <!-- strings -->
+          <g stroke="#9fb4bc" stroke-width="2.5">
+            <line x1="50" y1="62" x2="50" y2="302"/><line x1="90" y1="62" x2="90" y2="302"/>
+            <line x1="130" y1="62" x2="130" y2="302"/><line x1="170" y1="62" x2="170" y2="302"/>
+            <line x1="210" y1="62" x2="210" y2="302"/><line x1="250" y1="62" x2="250" y2="302"/>
+          </g>
+          <!-- frets -->
+          <g stroke="#cfdde1" stroke-width="2.5">
+            <line x1="48" y1="122" x2="252" y2="122"/><line x1="48" y1="182" x2="252" y2="182"/>
+            <line x1="48" y1="242" x2="252" y2="242"/><line x1="48" y1="302" x2="252" y2="302"/>
+          </g>
+          <!-- fret numbers -->
+          <g font-size="20" fill="#9fb4bc" text-anchor="middle">
+            <text x="24" y="99">1</text><text x="24" y="159">2</text>
+            <text x="24" y="219">3</text><text x="24" y="279">4</text>
+          </g>
+          <!-- dots: D G B на 1-м ладу (баг) -->
+          <g fill="#dc2626">
+            <circle cx="130" cy="92" r="15"/><circle cx="170" cy="92" r="15"/><circle cx="210" cy="92" r="15"/>
+          </g>
+        </svg>
+        <div class="sub">зажатые ноты уехали на полтона вниз — это уже не A</div>
+      </div>
+
+      <div class="card panel good">
+        <div class="verdict">✅ как берут A на самом деле</div>
+        <svg width="300" height="340" viewBox="0 0 300 340">
+          <!-- open/mute: x 0 _ _ _ 0 -->
+          <text x="50" y="38" font-size="26" fill="#5b7480" text-anchor="middle">×</text>
+          <circle cx="90" cy="30" r="9" fill="none" stroke="#5b7480" stroke-width="2.5"/>
+          <circle cx="250" cy="30" r="9" fill="none" stroke="#5b7480" stroke-width="2.5"/>
+          <!-- nut -->
+          <rect x="47" y="52" width="206" height="10" rx="3" fill="#10222b"/>
+          <!-- strings -->
+          <g stroke="#9fb4bc" stroke-width="2.5">
+            <line x1="50" y1="62" x2="50" y2="302"/><line x1="90" y1="62" x2="90" y2="302"/>
+            <line x1="130" y1="62" x2="130" y2="302"/><line x1="170" y1="62" x2="170" y2="302"/>
+            <line x1="210" y1="62" x2="210" y2="302"/><line x1="250" y1="62" x2="250" y2="302"/>
+          </g>
+          <!-- frets -->
+          <g stroke="#cfdde1" stroke-width="2.5">
+            <line x1="48" y1="122" x2="252" y2="122"/><line x1="48" y1="182" x2="252" y2="182"/>
+            <line x1="48" y1="242" x2="252" y2="242"/><line x1="48" y1="302" x2="252" y2="302"/>
+          </g>
+          <!-- fret numbers -->
+          <g font-size="20" fill="#9fb4bc" text-anchor="middle">
+            <text x="24" y="99">1</text><text x="24" y="159">2</text>
+            <text x="24" y="219">3</text><text x="24" y="279">4</text>
+          </g>
+          <!-- dots: D G B на 2-м ладу -->
+          <g fill="#0d9488">
+            <circle cx="130" cy="152" r="15"/><circle cx="170" cy="152" r="15"/><circle cx="210" cy="152" r="15"/>
+          </g>
+        </svg>
+        <div class="sub">x02220 — второй лад, классика</div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

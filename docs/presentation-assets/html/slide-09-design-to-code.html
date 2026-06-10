@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_base.css">
+<style>
+  .stage { display: flex; align-items: center; gap: 36px; }
+  .col { display: flex; flex-direction: column; gap: 18px; align-items: center; }
+  .col h2 { font-size: 30px; font-weight: 800; letter-spacing: -0.01em; }
+  .col h2 .accent { color: var(--accent); }
+  .window { width: 560px; }
+
+  /* Мини-макет приложения в окне Claude Design */
+  .design-body { padding: 18px; display: flex; flex-direction: column; gap: 14px; background: #fbfdfd; }
+  .mock-app { display: grid; grid-template-columns: 90px 1fr 110px; gap: 10px; }
+  .pane { border: 1px solid var(--border); border-radius: 10px; background: #fff; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .bar { height: 9px; border-radius: 5px; background: #e3edef; }
+  .bar.w60 { width: 60%; } .bar.w80 { width: 80%; }
+  .chiprow { display: flex; gap: 5px; flex-wrap: wrap; }
+  .chip { width: 16px; height: 16px; border-radius: 5px; }
+  .fret { height: 64px; border-radius: 8px; border: 1px solid var(--border);
+          background: repeating-linear-gradient(90deg, #fff 0 38px, #e8f0f2 38px 40px); position: relative; }
+  .fret i { position: absolute; width: 13px; height: 13px; border-radius: 50%; display: block; }
+  .circle-mock { width: 74px; height: 74px; border-radius: 50%; margin: 4px auto 0;
+    background: conic-gradient(#e25c45 0 14%, #e08b3a 14% 28%, #b0a33c 28% 42%, #4caf6e 42% 57%, #3f87d6 57% 71%, #8a6fd1 71% 85%, #b85ca8 85% 100%);
+    -webkit-mask: radial-gradient(circle, transparent 26px, #000 27px); mask: radial-gradient(circle, transparent 26px, #000 27px); }
+  .bubble { align-self: flex-end; background: var(--accent-soft); color: #0b5f58;
+    border-radius: 14px 14px 4px 14px; padding: 10px 16px; font-size: 16.5px; max-width: 75%; }
+
+  /* Терминал Claude Code */
+  .term-body { padding: 38px 26px; background: #fcfeff; font-family: "JetBrains Mono", Consolas, monospace;
+               font-size: 17.5px; line-height: 2.0; }
+  .term-body .user { color: var(--text); font-weight: 700; }
+  .term-body .step { color: var(--muted); }
+  .term-body .step::before { content: "● "; color: var(--accent); }
+  .term-body .ok { color: var(--good); font-weight: 700; }
+
+  /* Стрелка между окнами */
+  .link { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .link .label { font-size: 19px; font-weight: 700; color: var(--accent-2);
+    background: var(--accent-soft); padding: 8px 18px; border-radius: 999px; white-space: nowrap; }
+  .caption { font-size: 19px; color: var(--muted); }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="col">
+      <h2>Claude <span class="accent">Design</span></h2>
+      <div class="card window">
+        <div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="title">helix · preview</span></div>
+        <div class="design-body">
+          <div class="mock-app">
+            <div class="pane">
+              <div class="bar w80"></div><div class="bar w60"></div>
+              <div class="chiprow">
+                <span class="chip" style="background:#e25c45"></span><span class="chip" style="background:#e08b3a"></span>
+                <span class="chip" style="background:#b0a33c"></span><span class="chip" style="background:#4caf6e"></span>
+                <span class="chip" style="background:#3f87d6"></span><span class="chip" style="background:#8a6fd1"></span>
+              </div>
+              <div class="bar"></div><div class="bar w80"></div><div class="bar w60"></div>
+            </div>
+            <div class="pane">
+              <div class="fret">
+                <i style="left:30px;top:12px;background:#e25c45"></i>
+                <i style="left:108px;top:34px;background:#4caf6e"></i>
+                <i style="left:148px;top:12px;background:#3f87d6"></i>
+                <i style="left:226px;top:34px;background:#8a6fd1"></i>
+                <i style="left:266px;top:12px;background:#e08b3a"></i>
+              </div>
+              <div class="circle-mock"></div>
+            </div>
+            <div class="pane">
+              <div class="bar"></div><div class="bar w80"></div><div class="bar"></div>
+              <div class="bar w60"></div><div class="bar w80"></div>
+            </div>
+          </div>
+          <div class="bubble">сделай круг сворачиваемым, а рядом — мини-карточки диатоники</div>
+        </div>
+      </div>
+      <div class="caption">прототип: говоришь — видишь</div>
+    </div>
+
+    <div class="link">
+      <div class="label">экспорт кода</div>
+      <svg width="120" height="48" viewBox="0 0 120 48">
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#0d9488"/><stop offset="1" stop-color="#0e7490"/>
+        </linearGradient></defs>
+        <path d="M4 24 H96" stroke="url(#g)" stroke-width="7" stroke-linecap="round"/>
+        <path d="M88 8 L114 24 L88 40 Z" fill="#0e7490"/>
+      </svg>
+    </div>
+
+    <div class="col">
+      <h2>Claude <span class="accent">Code</span></h2>
+      <div class="card window">
+        <div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="title">~/helix-music-helper</span></div>
+        <div class="term-body">
+          <div class="user">&gt; хочу обращения аккордов отдельными карточками</div>
+          <div class="step">Читаю src/theory/chords.js, voicings.js…</div>
+          <div class="step">Правлю генератор + карточки поиска</div>
+          <div class="step">Проверяю в браузере, снимаю скриншот</div>
+          <div class="ok">✓ Готово: C/E и C/G — отдельные карточки</div>
+        </div>
+      </div>
+      <div class="caption">продакшн: git, рефакторинг, фичи</div>
+    </div>
+  </div>
+</body>
+</html>

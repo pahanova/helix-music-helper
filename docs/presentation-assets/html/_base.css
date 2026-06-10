@@ -1,0 +1,67 @@
+/* Общий стиль карточек для слайдов: светлая тема, сине-зелёный акцент */
+:root {
+  --bg: #f6fafa;
+  --card: #ffffff;
+  --border: #dde7e9;
+  --text: #10222b;
+  --muted: #5b7480;
+  --accent: #0d9488;       /* teal */
+  --accent-2: #0e7490;     /* blue-cyan */
+  --accent-soft: #e6f6f4;
+  --bad: #dc2626;
+  --bad-soft: #fdecec;
+  --good: #0d9488;
+  --good-soft: #e6f6f4;
+  --shadow: 0 18px 45px rgba(13, 90, 100, 0.10), 0 4px 12px rgba(13, 90, 100, 0.06);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1600px; height: 900px; overflow: hidden; }
+body {
+  background:
+    radial-gradient(1100px 600px at 18% -10%, rgba(13, 148, 136, 0.10), transparent 60%),
+    radial-gradient(900px 600px at 105% 115%, rgba(14, 116, 144, 0.10), transparent 55%),
+    var(--bg);
+  color: var(--text);
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mono { font-family: "JetBrains Mono", Consolas, monospace; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+}
+/* Окно с тремя точками (терминал/браузер) */
+.window { overflow: hidden; }
+.window .titlebar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 20px;
+  background: #f2f7f8;
+  border-bottom: 1px solid var(--border);
+}
+.window .dots { display: flex; gap: 7px; }
+.window .dots i {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: #d3e0e3; display: block;
+}
+.window .dots i:first-child { background: #f0b9b4; }
+.window .dots i:nth-child(2) { background: #f3d9a6; }
+.window .dots i:nth-child(3) { background: #a9dcc7; }
+.window .title {
+  font-size: 15px; color: var(--muted);
+  font-family: "JetBrains Mono", Consolas, monospace;
+}
+.badge {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-2);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}

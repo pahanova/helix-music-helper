@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_base.css">
+<style>
+  .stage { display: flex; flex-direction: column; align-items: center; gap: 30px; }
+  .window { width: 1180px; }
+  .term {
+    padding: 34px 42px; background: #fcfeff;
+    font-family: "JetBrains Mono", Consolas, monospace;
+    font-size: 24px; line-height: 2.0;
+  }
+  .prompt { color: var(--muted); }
+  .cmd { color: var(--text); font-weight: 700; }
+  .dim { color: var(--muted); }
+  .ok { color: var(--good); font-weight: 700; }
+  .ok::before { content: "✓ "; }
+  .cursor { display: inline-block; width: 13px; height: 26px; background: var(--accent);
+            vertical-align: -4px; border-radius: 2px; }
+  .caption { font-size: 25px; color: var(--muted); text-align: center; line-height: 1.5; }
+  .caption b { color: var(--accent-2); }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="card window">
+      <div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="title">~/helix-music-helper</span></div>
+      <div class="term">
+        <div><span class="prompt">$ </span><span class="cmd">node scripts/check-spelling.js</span></div>
+        <div class="dim">scales · побуквенное написание для всех тональностей</div>
+        <div class="dim">chords · знаковая семья корня (B♭–D–F, не A♯)</div>
+        <div class="dim">golden · D minor, F♯ major, D♯→E♭ major, …</div>
+        <div class="ok">All spelling checks passed: 17 roots × 11 modes + golden cases.</div>
+        <div><span class="prompt">$ </span><span class="cursor"></span></div>
+      </div>
+    </div>
+    <div class="caption">Агент написал не только логику, но и проверку к ней:<br><b>187 тональностей</b> прогоняются одной командой после каждой правки теории</div>
+  </div>
+</body>
+</html>
